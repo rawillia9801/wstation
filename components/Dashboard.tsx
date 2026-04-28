@@ -6,6 +6,10 @@ import TopStatusBar from './TopStatusBar'
 import MoonPhasePanel from './MoonPhasePanel'
 import HeroConditionPanel from './HeroConditionPanel'
 import ForecastStrip from './ForecastStrip'
+import NavPills from './NavPills'
+import UVPanel from './UVPanel'
+import RadarPanel from './RadarPanel'
+import SunMoonPanel from './SunMoonPanel'
 
 export default function Dashboard() {
   const [station, setStation] = useState<any>(null)
@@ -34,27 +38,42 @@ export default function Dashboard() {
   return (
     <main className='min-h-screen telemetry-grid relative overflow-hidden p-8'>
       <div className='scanline absolute inset-0 pointer-events-none' />
-      <section className='relative z-10 max-w-7xl mx-auto space-y-8'>
-        <TopStatusBar updatedAt={updatedAt} />
-
-        <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-          <div className='lg:col-span-2'>
-            <HeroConditionPanel
-              condition={station?.solarRadiation ? 'Live Atmospheric Conditions' : 'Loading conditions'}
-              temperature={station?.imperial?.temp ?? '--'}
-            />
+      <section className='relative z-10 max-w-7xl mx-auto space-y-6'>
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 items-start'>
+          <div>
+            <div className='text-cyan-400 tracking-[0.4em] text-sm mb-3'>LIVE PERSONAL WEATHER STATION</div>
+            <h1 className='text-6xl font-black'>Staley Street Weather</h1>
+            <p className='text-slate-400 mt-3'>Marion, Virginia • Station KVAMARIO42 • LIVE</p>
           </div>
-          <MoonPhasePanel moonPhase='Waxing Gibbous' illumination='71%' />
+          <div className='space-y-4'>
+            <TopStatusBar updatedAt={updatedAt} />
+            <NavPills />
+          </div>
         </div>
 
-        <div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
-          <MetricCard title='Temperature' value={station?.imperial?.temp ?? '--'} unit='°F' />
-          <MetricCard title='Humidity' value={station?.humidity ?? '--'} unit='%' />
-          <MetricCard title='Pressure' value={station?.imperial?.pressure ?? '--'} unit='inHg' />
-          <MetricCard title='Wind' value={station?.imperial?.windSpeed ?? '--'} unit='mph' />
+        <div className='grid grid-cols-1 lg:grid-cols-12 gap-6'>
+          <div className='lg:col-span-6'>
+            <HeroConditionPanel condition={'Rain'} temperature={station?.imperial?.temp ?? '--'} />
+          </div>
+          <div className='lg:col-span-2'><MetricCard title='Humidity' value={station?.humidity ?? '--'} unit='%' /></div>
+          <div className='lg:col-span-2'><MetricCard title='Pressure' value={station?.imperial?.pressure ?? '--'} unit='inHg' /></div>
+          <div className='lg:col-span-2'><MetricCard title='Wind' value={station?.imperial?.windSpeed ?? '--'} unit='mph' /></div>
         </div>
 
-        <ForecastStrip periods={forecast} />
+        <div className='grid grid-cols-1 lg:grid-cols-12 gap-6'>
+          <div className='lg:col-span-9'>
+            <ForecastStrip periods={forecast} />
+          </div>
+          <div className='lg:col-span-3'>
+            <MoonPhasePanel moonPhase='Waning Gibbous' illumination='76%' />
+          </div>
+        </div>
+
+        <div className='grid grid-cols-1 lg:grid-cols-12 gap-6'>
+          <div className='lg:col-span-4'><RadarPanel /></div>
+          <div className='lg:col-span-3'><UVPanel uv={station?.uv ?? 2} /></div>
+          <div className='lg:col-span-5'><SunMoonPanel /></div>
+        </div>
       </section>
     </main>
   )
