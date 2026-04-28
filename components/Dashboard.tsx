@@ -11,14 +11,16 @@ export default function Dashboard() {
   useEffect(() => {
     async function load() {
       try {
-        const mod = await import('@/lib/live')
-        const payload = await mod.getLiveWeatherPayload()
-        setStation(payload.station)
-        setForecast(payload.forecast)
+        const stationResponse = await fetch('/api/station')
+        const forecastResponse = await fetch('/api/forecast')
+
+        setStation(await stationResponse.json())
+        setForecast(await forecastResponse.json())
       } catch (e) {
         console.error(e)
       }
     }
+
     load()
     const timer = setInterval(load, 60000)
     return () => clearInterval(timer)
@@ -30,7 +32,8 @@ export default function Dashboard() {
       <section className='relative z-10 max-w-7xl mx-auto space-y-8'>
         <div>
           <div className='text-cyan-400 tracking-[0.4em] text-sm mb-3'>LIVE PERSONAL WEATHER STATION</div>
-          <h1 className='text-6xl font-black'>WSTATION COMMAND</h1>
+          <h1 className='text-6xl font-black'>Staley Street Weather</h1>
+          <p className='text-slate-400 mt-3'>Marion, Virginia • Station KVAMARIO42</p>
         </div>
         <div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
           <MetricCard title='Temperature' value={station?.imperial?.temp ?? '--'} unit='°F' />
