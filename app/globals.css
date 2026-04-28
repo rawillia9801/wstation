@@ -5,7 +5,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: radial-gradient(circle at top, #0b1d34 0%, #02060d 55%, #000000 100%);
+  background: radial-gradient(circle at top, #102742 0%, #02060d 45%, #000000 100%);
   color: white;
   font-family: Arial, Helvetica, sans-serif;
 }
@@ -16,24 +16,33 @@ html, body {
 
 .telemetry-grid {
   background-image:
-    linear-gradient(rgba(0,217,255,0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,217,255,0.06) 1px, transparent 1px);
+    linear-gradient(rgba(0,217,255,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,217,255,0.07) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 
 .glass-panel {
-  background: rgba(8,17,31,0.7);
-  border: 1px solid rgba(0,217,255,0.15);
-  box-shadow: 0 0 30px rgba(0,217,255,0.12);
-  backdrop-filter: blur(18px);
+  background: rgba(8,17,31,0.76);
+  border: 1px solid rgba(0,217,255,0.18);
+  box-shadow: 0 0 40px rgba(0,217,255,0.14);
+  backdrop-filter: blur(22px);
 }
 
 .scanline::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, transparent, rgba(0,217,255,0.04), transparent);
-  animation: scan 6s linear infinite;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, rgba(0,217,255,0.05), transparent);
+  animation: scan 5s linear infinite;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 20% 20%, rgba(0,217,255,0.08), transparent 30%), radial-gradient(circle at 80% 10%, rgba(0,217,255,0.05), transparent 25%);
 }
 
 @keyframes scan {
