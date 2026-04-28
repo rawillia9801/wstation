@@ -50,22 +50,27 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className='grid grid-cols-1 lg:grid-cols-14 gap-3'>
-          <div className='lg:col-span-6'><HeroConditionPanel condition={'Rain'} temperature={station?.imperial?.temp ?? '--'} /></div>
-          <div className='lg:col-span-2'><MetricCard title='Humidity' value={station?.humidity ?? '--'} unit='%' /></div>
-          <div className='lg:col-span-2'><MetricCard title='Pressure' value={station?.imperial?.pressure ?? '--'} unit='inHg' /></div>
-          <div className='lg:col-span-2'><MetricCard title='Wind' value={station?.imperial?.windSpeed ?? '--'} unit='mph' /></div>
-          <div className='lg:col-span-2'><UVPanel uv={station?.uv ?? 2} /></div>
+        <div className='grid grid-cols-1 lg:grid-cols-12 gap-3'>
+          <div className='lg:col-span-7'>
+            <HeroConditionPanel condition='Rain' temperature={station?.imperial?.temp ?? '--'} />
+          </div>
+          <div className='lg:col-span-5 grid grid-cols-2 gap-3'>
+            <MetricCard title='Humidity' value={station?.humidity ?? '--'} unit='%' />
+            <MetricCard title='Pressure' value={station?.imperial?.pressure ?? '--'} unit='inHg' />
+            <MetricCard title='Wind' value={station?.imperial?.windSpeed ?? '--'} unit='mph' />
+            <UVPanel uv={station?.uv ?? 2} />
+          </div>
         </div>
 
         <div className='grid grid-cols-1 lg:grid-cols-12 gap-3'>
-          <div className='lg:col-span-9'><ForecastStrip periods={forecast} /></div>
-          <div className='lg:col-span-3'><MoonPhasePanel moonPhase='Waning Gibbous' illumination='76%' /></div>
+          <div className='lg:col-span-8'><ForecastStrip periods={forecast} /></div>
+          <div className='lg:col-span-4'><MoonPhasePanel moonPhase='Waning Gibbous' illumination='76%' /></div>
         </div>
 
         <div className='grid grid-cols-1 lg:grid-cols-12 gap-3'>
-          <div className='lg:col-span-5'><RadarPanel /></div>
-          <div className='lg:col-span-7'><SunMoonPanel /></div>
+          <div className='lg:col-span-4'><RadarPanel /></div>
+          <div className='lg:col-span-3'><UVPanel uv={station?.uv ?? 2} /></div>
+          <div className='lg:col-span-5'><SunMoonPanel /></div>
         </div>
       </section>
     </main>
