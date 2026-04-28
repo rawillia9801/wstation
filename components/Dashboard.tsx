@@ -11,11 +11,13 @@ export default function Dashboard() {
   useEffect(() => {
     async function load() {
       try {
-        const s = await fetch('/api/station-data').then(r => r.json())
-        const f = await fetch('/api/forecast-data').then(r => r.json())
-        setStation(s)
-        setForecast(f)
-      } catch {}
+        const mod = await import('@/lib/live')
+        const payload = await mod.getLiveWeatherPayload()
+        setStation(payload.station)
+        setForecast(payload.forecast)
+      } catch (e) {
+        console.error(e)
+      }
     }
     load()
     const timer = setInterval(load, 60000)
