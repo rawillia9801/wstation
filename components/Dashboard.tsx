@@ -21,7 +21,6 @@ export default function Dashboard() {
       try {
         const stationResponse = await fetch('/api/station')
         const forecastResponse = await fetch('/api/forecast')
-
         setStation(await stationResponse.json())
         setForecast(await forecastResponse.json())
         setUpdatedAt(new Date().toLocaleTimeString())
@@ -36,40 +35,34 @@ export default function Dashboard() {
   }, [])
 
   return (
-    <main className='min-h-screen telemetry-grid relative overflow-hidden p-8'>
+    <main className='min-h-screen telemetry-grid relative overflow-hidden px-4 py-3'>
       <div className='scanline absolute inset-0 pointer-events-none' />
-      <section className='relative z-10 max-w-7xl mx-auto space-y-6'>
-        <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 items-start'>
+      <section className='relative z-10 max-w-[1500px] mx-auto space-y-3'>
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-3 items-start'>
           <div>
-            <div className='text-cyan-400 tracking-[0.4em] text-sm mb-3'>LIVE PERSONAL WEATHER STATION</div>
-            <h1 className='text-6xl font-black'>Staley Street Weather</h1>
-            <p className='text-slate-400 mt-3'>Marion, Virginia • Station KVAMARIO42 • LIVE</p>
+            <div className='text-cyan-400 tracking-[0.35em] text-sm mb-1'>LIVE PERSONAL WEATHER STATION</div>
+            <h1 className='text-7xl xl:text-8xl font-black leading-none'>Staley Street Weather</h1>
+            <p className='text-slate-300 mt-2 text-xl'>Marion, Virginia • Station KVAMARIO42 • <span className='text-green-400'>LIVE</span></p>
           </div>
-          <div className='space-y-4'>
+          <div className='space-y-3'>
             <TopStatusBar updatedAt={updatedAt} />
             <NavPills />
           </div>
         </div>
 
-        <div className='grid grid-cols-1 lg:grid-cols-12 gap-6'>
-          <div className='lg:col-span-6'>
-            <HeroConditionPanel condition={'Rain'} temperature={station?.imperial?.temp ?? '--'} />
-          </div>
+        <div className='grid grid-cols-1 lg:grid-cols-12 gap-3'>
+          <div className='lg:col-span-6'><HeroConditionPanel condition={'Rain'} temperature={station?.imperial?.temp ?? '--'} /></div>
           <div className='lg:col-span-2'><MetricCard title='Humidity' value={station?.humidity ?? '--'} unit='%' /></div>
           <div className='lg:col-span-2'><MetricCard title='Pressure' value={station?.imperial?.pressure ?? '--'} unit='inHg' /></div>
           <div className='lg:col-span-2'><MetricCard title='Wind' value={station?.imperial?.windSpeed ?? '--'} unit='mph' /></div>
         </div>
 
-        <div className='grid grid-cols-1 lg:grid-cols-12 gap-6'>
-          <div className='lg:col-span-9'>
-            <ForecastStrip periods={forecast} />
-          </div>
-          <div className='lg:col-span-3'>
-            <MoonPhasePanel moonPhase='Waning Gibbous' illumination='76%' />
-          </div>
+        <div className='grid grid-cols-1 lg:grid-cols-12 gap-3'>
+          <div className='lg:col-span-9'><ForecastStrip periods={forecast} /></div>
+          <div className='lg:col-span-3'><MoonPhasePanel moonPhase='Waning Gibbous' illumination='76%' /></div>
         </div>
 
-        <div className='grid grid-cols-1 lg:grid-cols-12 gap-6'>
+        <div className='grid grid-cols-1 lg:grid-cols-12 gap-3'>
           <div className='lg:col-span-4'><RadarPanel /></div>
           <div className='lg:col-span-3'><UVPanel uv={station?.uv ?? 2} /></div>
           <div className='lg:col-span-5'><SunMoonPanel /></div>
