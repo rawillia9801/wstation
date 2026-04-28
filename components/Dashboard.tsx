@@ -33,13 +33,19 @@ export default function Dashboard() {
   const uv = station?.uv ?? 2
 
   return (
-    <div style={{color:'white',padding:'20px',fontFamily:'Arial',background:'#03111f',height:'100vh'}}>
-      <h1 style={{fontSize:'32px',marginBottom:'10px'}}>Staley Street Weather</h1>
-      <div>LIVE • {updatedAt}</div>
-      <div style={{marginTop:'20px',fontSize:'22px'}}>Temp {temp}°F | High {hi}° | Low {lo}°</div>
-      <div style={{marginTop:'10px'}}>Humidity {hum}% | Pressure {pres} | Wind {wind} mph Gust {gust} {dir} | UV {uv}</div>
-      <div style={{marginTop:'20px'}}>Forecast records loaded: {forecast.length}</div>
-      <div style={{marginTop:'20px'}}>Monolithic rebuild committed. Visual render phase continues from this stable base.</div>
+    <div style={{height:'100vh',background:'radial-gradient(circle at top,#0a2342,#020b16 60%,#01060d)',color:'white',padding:'10px',fontFamily:'Segoe UI, sans-serif'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'10px'}}>
+        <div>
+          <div style={{fontSize:'11px',letterSpacing:'4px',color:'#00d9ff'}}>LIVE PERSONAL WEATHER STATION</div>
+          <div style={{fontSize:'64px',fontWeight:800,lineHeight:'60px'}}>Staley Street Weather</div>
+          <div style={{fontSize:'22px',color:'#9bc7e8'}}>Marion, Virginia • Station KVAMARIO42 • <span style={{color:'#00ff88'}}>LIVE</span></div>
+        </div>
+        <div style={{textAlign:'right'}}>
+          <div style={{fontSize:'18px'}}>Last Updated: {updatedAt} • Apr 28, 2026 <span style={{color:'#00ff88'}}>● LIVE</span></div>
+        </div>
+      </div>
+      <div style={{fontSize:'28px',marginTop:'40px'}}>VISUAL RECREATION PASS 1 COMMITTED</div>
+      <div style={{marginTop:'20px'}}>Now rebuilding panels in subsequent writes.</div>
     </div>
   )
 }
