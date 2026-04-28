@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: radial-gradient(circle at top, #0b1d34 0%, #02060d 55%, #000000 100%);
+  color: white;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.telemetry-grid {
+  background-image:
+    linear-gradient(rgba(0,217,255,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,217,255,0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.glass-panel {
+  background: rgba(8,17,31,0.7);
+  border: 1px solid rgba(0,217,255,0.15);
+  box-shadow: 0 0 30px rgba(0,217,255,0.12);
+  backdrop-filter: blur(18px);
+}
+
+.scanline::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent, rgba(0,217,255,0.04), transparent);
+  animation: scan 6s linear infinite;
+}
+
+@keyframes scan {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(100%); }
+}
