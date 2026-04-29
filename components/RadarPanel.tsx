@@ -1,12 +1,17 @@
+const RADAR_URL = 'https://radar.weather.gov/?settings=v1_eyJhZ2VuZGEiOnsiaWQiOiJ3ZWF0aGVyIiwiY2VudGVyIjpbLTgzLjAzOCwzNi43OTNdLCJsb2NhdGlvbiI6Wy04Mi4xMTIsMzYuODg1XSwiem9vbSI6Ni43NjY4NDI4ODAzNDQ1ODksImxheWVyIjoiYnJlZl9xY2QifSwiYW5pbWF0aW5nIjp0cnVlLCJiYXNlIjoic3RhbmRhcmQiLCJhcnRjYyI6ZmFsc2UsImNvdW50eSI6ZmFsc2UsImN3YSI6ZmFsc2UsInJmYyI6ZmFsc2UsInN0YXRlIjpmYWxzZSwibWVudSI6dHJ1ZSwic2hvcnRGdXNlZE9ubHkiOmZhbHNlLCJvcGFjaXR5Ijp7ImFsZXJ0cyI6MC44LCJsb2NhbCI6MC42LCJsb2NhbFN0YXRpb25zIjowLjgsIm5hdGlvbmFsIjowLjZ9fQ%3D%3D'
+
 export default function RadarPanel() {
   return (
     <div className="glass-panel rounded-2xl p-3 h-full min-h-0 border border-cyan-400/20 overflow-hidden">
       <div className="text-cyan-400 tracking-[0.22em] uppercase text-[10px] mb-2">LIVE RADAR</div>
-      <div className="h-[calc(100%-18px)] rounded-xl overflow-hidden relative">
-        <div className="absolute inset-0 opacity-95 bg-[url('https://images.unsplash.com/photo-1592210454359-9043f067919b?q=80&w=1200&auto=format&fit=crop')] bg-cover bg-center" />
-        <div className="absolute bottom-1 left-3 right-3 h-2 rounded-full bg-black/50 overflow-hidden">
-          <div className="h-full w-full bg-gradient-to-r from-green-400 via-yellow-400 to-red-500" />
-        </div>
+      <div className="h-[calc(100%-18px)] rounded-xl overflow-hidden relative bg-black/40">
+        <iframe
+          title="NOAA live radar"
+          src={RADAR_URL}
+          className="absolute inset-0 h-full w-full border-0 scale-[1.18] origin-center"
+          loading="lazy"
+        />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-7 bg-gradient-to-t from-black/75 to-transparent" />
       </div>
     </div>
   )
