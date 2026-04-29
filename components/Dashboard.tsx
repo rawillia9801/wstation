@@ -1,51 +1,91 @@
 'use client'
 import { useEffect, useState } from 'react'
+import MetricCard from './MetricCard'
+import TopStatusBar from './TopStatusBar'
+import MoonPhasePanel from './MoonPhasePanel'
+import HeroConditionPanel from './HeroConditionPanel'
+import ForecastStrip from './ForecastStrip'
+import NavPills from './NavPills'
+import UVPanel from './UVPanel'
+import RadarPanel from './RadarPanel'
+import SunMoonPanel from './SunMoonPanel'
 
 export default function Dashboard() {
   const [station, setStation] = useState<any>(null)
   const [forecast, setForecast] = useState<any[]>([])
-  const [updatedAt, setUpdatedAt] = useState('3:00 PM')
+  const [updatedAt, setUpdatedAt] = useState('')
 
   useEffect(() => {
     async function load() {
       try {
-        const [sRes, fRes] = await Promise.all([fetch('/api/station'), fetch('/api/forecast')])
-        const s = await sRes.json()
-        const f = await fRes.json()
-        setStation(s)
-        setForecast(f)
-        setUpdatedAt(new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }))
-      } catch (e) { console.error(e) }
+        const stationResponse = await fetch('/api/station')
+        const forecastResponse = await fetch('/api/forecast')
+        setStation(await stationResponse.json())
+        setForecast(await forecastResponse.json())
+        setUpdatedAt(new Date().toLocaleTimeString())
+      } catch (e) {
+        console.error(e)
+      }
     }
     load()
-    const t = setInterval(load, 60000)
-    return () => clearInterval(t)
+    const timer = setInterval(load, 60000)
+    return () => clearInterval(timer)
   }, [])
 
-  const temp = station?.imperial?.temp ?? '71.4'
-  const hi = station?.imperial?.tempHigh ?? '72'
-  const lo = station?.imperial?.tempLow ?? '58'
-  const hum = station?.humidity ?? '59'
-  const pres = station?.imperial?.pressure ?? '29.93'
-  const wind = station?.imperial?.windSpeed ?? '6'
-  const gust = station?.imperial?.windGust ?? '9'
-  const dir = station?.winddir ?? 'WNW'
-  const uv = station?.uv ?? 2
-
   return (
-    <div style={{height:'100vh',background:'radial-gradient(circle at top,#0a2342,#020b16 60%,#01060d)',color:'white',padding:'10px',fontFamily:'Segoe UI, sans-serif'}}>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'10px'}}>
-        <div>
-          <div style={{fontSize:'11px',letterSpacing:'4px',color:'#00d9ff'}}>LIVE PERSONAL WEATHER STATION</div>
-          <div style={{fontSize:'64px',fontWeight:800,lineHeight:'60px'}}>Staley Street Weather</div>
-          <div style={{fontSize:'22px',color:'#9bc7e8'}}>Marion, Virginia • Station KVAMARIO42 • <span style={{color:'#00ff88'}}>LIVE</span></div>
+    <main className="h-screen telemetry-grid overflow-hidden px-4 py-3">
+      <section className="h-full w-full flex flex-col gap-3">
+        <div className="h-[10%] grid grid-cols-2 gap-3">
+          <div className="flex flex-col justify-center">
+            <div className="text-cyan-400 tracking-[0.28em] text-[10px] mb-1">
+              LIVE PERSONAL WEATHER STATION
+            </div>
+            <h1 className="text-4xl xl:text-6xl font-black leading-none">
+              Staley Street Weather
+            </h1>
+            <p className="text-slate-300 text-sm mt-1">
+              Marion, Virginia • Station KVAMARIO42 • <span className="text-green-400">LIVE</span>
+            </p>
+          </div>
+          <div className="flex flex-col justify-center gap-2">
+            <TopStatusBar updatedAt={updatedAt} />
+            <NavPills />
+          </div>
         </div>
-        <div style={{textAlign:'right'}}>
-          <div style={{fontSize:'18px'}}>Last Updated: {updatedAt} • Apr 28, 2026 <span style={{color:'#00ff88'}}>● LIVE</span></div>
+        <div className="h-[32%] grid grid-cols-12 gap-3">
+          <div className="col-span-7 h-full">
+            <HeroConditionPanel
+              condition="Rain"
+              temperature={station?.imperial?.temp ?? '--'}
+            />
+          </div>
+          <div className="col-span-5 h-full grid grid-cols-2 gap-3">
+            <MetricCard title="Humidity" value={station?.humidity ?? '--'} unit="%" />
+            <MetricCard title="Pressure" value={station?.imperial?.pressure ?? '--'} unit="inHg" />
+            <MetricCard title="Wind" value={station?.imperial?.windSpeed ?? '--'} unit="mph" />
+            <UVPanel uv={station?.uv ?? 2} />
+          </div>
         </div>
-      </div>
-      <div style={{fontSize:'28px',marginTop:'40px'}}>VISUAL RECREATION PASS 1 COMMITTED</div>
-      <div style={{marginTop:'20px'}}>Now rebuilding panels in subsequent writes.</div>
-    </div>
+        <div className="h-[30%] grid grid-cols-12 gap-3">
+          <div className="col-span-8 h-full">
+            <ForecastStrip periods={forecast} />
+          </div>
+          <div className="col-span-4 h-full">
+            <MoonPhasePanel moonPhase="Waning Gibbous" illumination="76%" />
+          </div>
+        </div>
+        <div className="h-[20%] grid grid-cols-12 gap-3">
+          <div className="col-span-4 h-full">
+            <RadarPanel />
+          </div>
+          <div className="col-span-3 h-full">
+            <UVPanel uv={station?.uv ?? 2} />
+          </div>
+          <div className="col-span-5 h-full">
+            <SunMoonPanel />
+          </div>
+        </div>
+      </section>
+    </main>
   )
 }
