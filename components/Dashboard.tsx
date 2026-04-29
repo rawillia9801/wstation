@@ -44,7 +44,7 @@ export default function Dashboard() {
             <NavPills />
           </div>
         </div>
-        <div className="h-[22%] grid grid-cols-12 gap-1.5 mt-1">
+        <div className="h-[21%] grid grid-cols-12 gap-1.5 mt-2">
           <div className="col-span-5 h-full">
             <HeroConditionPanel condition="Rain" temperature={station?.imperial?.temp ?? '--'} />
           </div>
@@ -55,7 +55,7 @@ export default function Dashboard() {
             <UVPanel uv={station?.uv ?? 2} />
           </div>
         </div>
-        <div className="h-[19%] grid grid-cols-12 gap-1.5 mt-2">
+        <div className="h-[20%] grid grid-cols-12 gap-1.5 mt-5">
           <div className="col-span-9 h-full">
             <ForecastStrip periods={forecast} />
           </div>
@@ -63,11 +63,8 @@ export default function Dashboard() {
             <MoonPhasePanel moonPhase="Waning Gibbous" illumination="76%" />
           </div>
         </div>
-        <div className="h-[14%] rounded-2xl border border-cyan-400/30 bg-slate-950/70 px-5 py-3 flex flex-col justify-center overflow-hidden mt-2">
-          <div className="text-white text-base font-bold mb-1">Water Temp 67°F • Water Quality GOOD • UV Exposure {station?.uv ?? 2} LOW RISK • Safe Swim Window Noon–5PM</div>
-          <div className="whitespace-nowrap animate-[marquee_28s_linear_infinite] text-slate-200 text-xs">
-            Families can expect cool but comfortable shoreline conditions today • UV remains low for tanning with periodic cloud breaks • No harmful algae advisories reported • Light breeze across the lake • Surface temperature holding in the upper 60s •
-          </div>
+        <div className="h-[6%] rounded-xl border border-cyan-400/20 bg-slate-950/50 px-3 py-1 flex items-center overflow-hidden mt-3 text-xs text-white font-semibold whitespace-nowrap animate-[marquee_26s_linear_infinite]">
+          Hungry Mother Swim Advisory • Water Temp 67°F • Water Quality GOOD • UV Exposure {station?.uv ?? 2} LOW RISK • Safe Swim Window Noon–5PM • Families can expect cool but comfortable shoreline conditions today • No harmful algae advisories reported •
         </div>
         <div className="h-[4%] mt-1 flex items-center justify-between text-[8px] text-cyan-300 px-2 border-t border-cyan-400/20">
           <span>Station Online • Ambient Weather API • NOAA Forecast Sync</span>
