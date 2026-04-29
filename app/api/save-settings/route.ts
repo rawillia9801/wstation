@@ -1,0 +1,31 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+
+export async function POST(req: NextRequest) {
+  const body = await req.json()
+
+  const payload = {
+    notification_emails: body.notification_emails || [],
+    notification_phones: body.notification_phones || [],
+    daily_report_time: body.daily_report_time || '07:00',
+    daily_report_enabled: body.daily_report_enabled ?? true,
+    abnormal_alerts_enabled: body.abnormal_alerts_enabled ?? true,
+  }
+
+  const { data: existing } = await supabase.from('station_settings').select('id').limit(1).single()
+
+  if (existing) {
+    await supabase.from('station_settings').update(payload).eq('id', existing.id)
+  } else {
+    await supabase.from('station_settings').insert(payload)
+  }
+
+  return NextResponse.json({ ok:true })
+}
+
+export async function GET() {
+  const { data } = await supabase.from('station_settings').select('*').limit(1).single()
+  return NextResponse.json(data || {})
+}
