@@ -31,20 +31,20 @@ export default function Dashboard() {
   }, [])
 
   return (
-    <main className="h-screen telemetry-grid overflow-hidden px-2 py-2 scale-[0.72] origin-top-left w-[138%]">
-      <section className="h-full w-full flex flex-col gap-2">
-        <div className="h-[14%] grid grid-cols-2 gap-1.5">
-          <div className="flex flex-col justify-center pt-1">
+    <main className="h-screen telemetry-grid overflow-hidden px-2 py-3 scale-[0.72] origin-top-left w-[138%]">
+      <section className="h-full w-full flex flex-col gap-3">
+        <div className="h-[18%] grid grid-cols-2 gap-1.5">
+          <div className="flex flex-col justify-center pt-2">
             <div className="text-cyan-400 tracking-[0.22em] text-[8px] mb-1">LIVE PERSONAL WEATHER STATION</div>
             <h1 className="text-2xl xl:text-4xl font-black leading-none">Staley Street Weather</h1>
             <p className="text-slate-300 text-[10px] mt-1">Marion, Virginia • Station KVAMARIO42 • <span className="text-green-400">LIVE</span></p>
           </div>
-          <div className="flex flex-col justify-center gap-1 pt-1">
+          <div className="flex flex-col justify-center gap-1 pt-2">
             <TopStatusBar updatedAt={updatedAt} />
             <NavPills />
           </div>
         </div>
-        <div className="h-[28%] grid grid-cols-12 gap-1.5 mt-2">
+        <div className="h-[24%] grid grid-cols-12 gap-1.5 mt-1">
           <div className="col-span-5 h-full">
             <HeroConditionPanel condition="Rain" temperature={station?.imperial?.temp ?? '--'} />
           </div>
@@ -55,7 +55,7 @@ export default function Dashboard() {
             <UVPanel uv={station?.uv ?? 2} />
           </div>
         </div>
-        <div className="h-[22%] grid grid-cols-12 gap-1.5 mt-1">
+        <div className="h-[20%] grid grid-cols-12 gap-1.5 mt-1">
           <div className="col-span-9 h-full">
             <ForecastStrip periods={forecast} />
           </div>
@@ -63,7 +63,7 @@ export default function Dashboard() {
             <MoonPhasePanel moonPhase="Waning Gibbous" illumination="76%" />
           </div>
         </div>
-        <div className="h-[28%] rounded-2xl border border-cyan-400/30 bg-slate-950/70 px-5 py-4 flex flex-col justify-center overflow-hidden">
+        <div className="h-[24%] rounded-2xl border border-cyan-400/30 bg-slate-950/70 px-5 py-4 flex flex-col justify-center overflow-hidden mt-1">
           <div className="text-cyan-400 tracking-[0.22em] text-[10px] mb-2">HUNGRY MOTHER STATE PARK SWIM ADVISORY</div>
           <div className="text-white text-lg font-bold mb-2">Water Temp 67°F • Water Quality GOOD • UV Exposure {station?.uv ?? 2} LOW RISK • Safe Swim Window Noon–5PM</div>
           <div className="whitespace-nowrap animate-[marquee_28s_linear_infinite] text-slate-200 text-sm">
