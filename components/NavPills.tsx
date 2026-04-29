@@ -8,6 +8,7 @@ export default function NavPills() {
   const [showAlarms, setShowAlarms] = useState(false)
   const [emails, setEmails] = useState('')
   const [phones, setPhones] = useState('')
+  const [alarmTest, setAlarmTest] = useState('Thunderstorm Warning')
 
   useEffect(() => {
     fetch('/api/save-settings').then(r => r.json()).then(data => {
@@ -36,20 +37,20 @@ export default function NavPills() {
     alert('Test forecast email dispatched.')
   }
 
+  async function sendAlarmTest() {
+    await fetch('/api/send-alert-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: alarmTest, message: 'Manual trigger test from Smart Weather Alarm Center.' })
+    })
+    alert('Alarm trigger email dispatched.')
+  }
+
   function handleClick(pill:string) {
-    if (pill === 'DASHBOARD') {
-      setShowSettings(false)
-      setShowAlarms(false)
-    }
+    if (pill === 'DASHBOARD') { setShowSettings(false); setShowAlarms(false) }
     if (pill === 'HISTORY') alert('Weather history module loading...')
-    if (pill === 'ALARMS') {
-      setShowAlarms(!showAlarms)
-      setShowSettings(false)
-    }
-    if (pill === 'SETTINGS') {
-      setShowSettings(!showSettings)
-      setShowAlarms(false)
-    }
+    if (pill === 'ALARMS') { setShowAlarms(!showAlarms); setShowSettings(false) }
+    if (pill === 'SETTINGS') { setShowSettings(!showSettings); setShowAlarms(false) }
   }
 
   const alarmRow = (title:string, placeholder:string) => (
@@ -69,7 +70,7 @@ export default function NavPills() {
       </div>
 
       {showSettings && (
-        <div className="absolute right-4 top-24 w-[520px] max-w-[90vw] rounded-3xl border border-cyan-300/30 bg-slate-950/95 backdrop-blur-xl p-5 z-[100] shadow-[0_0_30px_rgba(0,217,255,0.25)] text-white">
+        <div className="absolute right-4 top-24 w-[520px] max-w-[90vw] rounded-3xl border border-cyan-300/30 bg-slate-950/95 backdrop-blur-xl p-5 z-[100] text-white">
           <div className="text-cyan-300 text-lg font-bold mb-4 tracking-[0.2em]">NOTIFICATION SETTINGS CENTER</div>
           <div className="mb-4"><div className="text-cyan-200 text-sm mb-2">Daily Forecast Email Recipients</div><textarea value={emails} onChange={e => setEmails(e.target.value)} className="w-full rounded-xl bg-black/50 border border-cyan-400/20 px-3 py-2 text-sm h-20" /></div>
           <div className="mb-4"><div className="text-cyan-200 text-sm mb-2">SMS Alert Recipients</div><textarea value={phones} onChange={e => setPhones(e.target.value)} className="w-full rounded-xl bg-black/50 border border-cyan-400/20 px-3 py-2 text-sm h-20" /></div>
@@ -78,7 +79,7 @@ export default function NavPills() {
       )}
 
       {showAlarms && (
-        <div className="absolute right-4 top-24 w-[760px] max-w-[94vw] rounded-3xl border border-red-300/20 bg-slate-950/95 backdrop-blur-xl p-6 z-[100] shadow-[0_0_30px_rgba(255,80,80,0.18)] text-white max-h-[78vh] overflow-y-auto">
+        <div className="absolute right-4 top-24 w-[760px] max-w-[94vw] rounded-3xl border border-red-300/20 bg-slate-950/95 backdrop-blur-xl p-6 z-[100] text-white max-h-[78vh] overflow-y-auto">
           <div className="text-red-300 text-xl font-bold mb-4 tracking-[0.2em]">SMART WEATHER ALARM CONTROL CENTER</div>
           {alarmRow('Morning Forecast Dispatch', '7:00 AM EST')}
           {alarmRow('Thunderstorm Probability', '>40%')}
@@ -89,6 +90,7 @@ export default function NavPills() {
           {alarmRow('Tornado Warning', 'Instant')}
           {alarmRow('Flood / Heavy Rain', '>1in/hr')}
           {alarmRow('UV Burn Risk', 'UV >7')}
+          <div className="grid grid-cols-2 gap-3 mt-5"><input value={alarmTest} onChange={e => setAlarmTest(e.target.value)} className="rounded-xl bg-black/50 border border-red-300/30 px-3 py-2 text-sm" /><button onClick={sendAlarmTest} className="rounded-xl bg-red-500/20 border border-red-300/30 py-2 text-sm">Send Trigger Test</button></div>
         </div>
       )}
     </>
