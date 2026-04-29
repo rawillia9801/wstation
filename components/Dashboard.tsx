@@ -31,31 +31,31 @@ export default function Dashboard() {
   }, [])
 
   return (
-    <main className="h-screen telemetry-grid overflow-hidden px-3 py-2">
-      <section className="h-full w-full flex flex-col gap-2">
-        <div className="h-[10%] grid grid-cols-2 gap-2">
+    <main className="h-screen telemetry-grid overflow-hidden px-2 py-1 scale-[0.72] origin-top-left w-[138%]">
+      <section className="h-full w-full flex flex-col gap-1.5">
+        <div className="h-[10%] grid grid-cols-2 gap-1.5">
           <div className="flex flex-col justify-center">
-            <div className="text-cyan-400 tracking-[0.24em] text-[9px] mb-0.5">LIVE PERSONAL WEATHER STATION</div>
-            <h1 className="text-3xl xl:text-5xl font-black leading-none">Staley Street Weather</h1>
-            <p className="text-slate-300 text-xs mt-0.5">Marion, Virginia • Station KVAMARIO42 • <span className="text-green-400">LIVE</span></p>
+            <div className="text-cyan-400 tracking-[0.22em] text-[8px] mb-0.5">LIVE PERSONAL WEATHER STATION</div>
+            <h1 className="text-2xl xl:text-4xl font-black leading-none">Staley Street Weather</h1>
+            <p className="text-slate-300 text-[10px] mt-0.5">Marion, Virginia • Station KVAMARIO42 • <span className="text-green-400">LIVE</span></p>
           </div>
           <div className="flex flex-col justify-center gap-1">
             <TopStatusBar updatedAt={updatedAt} />
             <NavPills />
           </div>
         </div>
-        <div className="h-[38%] grid grid-cols-12 gap-2">
+        <div className="h-[38%] grid grid-cols-12 gap-1.5">
           <div className="col-span-5 h-full">
             <HeroConditionPanel condition="Rain" temperature={station?.imperial?.temp ?? '--'} />
           </div>
-          <div className="col-span-7 h-full grid grid-cols-4 gap-2">
+          <div className="col-span-7 h-full grid grid-cols-4 gap-1.5">
             <MetricCard title="Humidity" value={station?.humidity ?? '--'} unit="%" />
             <MetricCard title="Pressure" value={station?.imperial?.pressure ?? '--'} unit="inHg" />
             <MetricCard title="Wind" value={station?.imperial?.windSpeed ?? '--'} unit="mph" />
             <UVPanel uv={station?.uv ?? 2} />
           </div>
         </div>
-        <div className="h-[40%] grid grid-cols-12 gap-2">
+        <div className="h-[40%] grid grid-cols-12 gap-1.5">
           <div className="col-span-9 h-full">
             <ForecastStrip periods={forecast} />
           </div>
@@ -63,7 +63,7 @@ export default function Dashboard() {
             <MoonPhasePanel moonPhase="Waning Gibbous" illumination="76%" />
           </div>
         </div>
-        <div className="h-[4%] flex items-center justify-between text-[10px] text-cyan-300 px-2 border-t border-cyan-400/20">
+        <div className="h-[4%] flex items-center justify-between text-[8px] text-cyan-300 px-2 border-t border-cyan-400/20">
           <span>Station Online • Ambient Weather API • NOAA Forecast Sync</span>
           <span>Auto Refresh 8s</span>
         </div>
