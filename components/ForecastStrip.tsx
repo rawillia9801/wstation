@@ -8,19 +8,19 @@ export default function ForecastStrip({ periods }: { periods: any[] }) {
   ]
 
   return (
-    <div className='glass-panel rounded-3xl p-5 border border-cyan-400/25'>
-      <div className='text-cyan-400 tracking-[0.25em] text-sm uppercase mb-4'>5 DAY FORECAST</div>
-      <div className='grid grid-cols-2 md:grid-cols-5 gap-4'>
+    <div className='glass-panel rounded-2xl p-3 h-full min-h-0 border border-cyan-400/25 overflow-hidden'>
+      <div className='text-cyan-400 tracking-[0.22em] text-[10px] uppercase mb-2'>5 DAY FORECAST</div>
+      <div className='grid grid-cols-5 gap-2 h-[calc(100%-18px)]'>
         {periods.slice(0,5).map((p, i) => (
-          <div key={i} className='rounded-2xl min-h-[230px] relative overflow-hidden border border-cyan-400/20'>
+          <div key={i} className='rounded-xl h-full min-h-0 relative overflow-hidden border border-cyan-400/20'>
             <div className='absolute inset-0 bg-cover bg-center opacity-55' style={{ backgroundImage: `url(${images[i]})` }} />
             <div className='absolute inset-0 bg-gradient-to-b from-black/20 to-black/80' />
-            <div className='relative z-10 p-4 h-full flex flex-col justify-between'>
-              <div className='font-bold text-xl'>{p.name}</div>
+            <div className='relative z-10 p-2 h-full flex flex-col justify-between'>
+              <div className='font-bold text-[10px] xl:text-xs'>{p.name}</div>
               <div>
-                <div className='text-5xl font-black'>{p.temperature}°</div>
-                <div className='text-slate-200 text-sm mt-2'>{p.shortForecast}</div>
-                <div className='text-cyan-300 text-sm mt-3'>💧 {10 + i * 10}%</div>
+                <div className='text-2xl xl:text-3xl font-black'>{p.temperature}°</div>
+                <div className='text-slate-200 text-[8px] mt-1 leading-tight'>{p.shortForecast}</div>
+                <div className='text-cyan-300 text-[8px] mt-1'>💧 {10 + i * 10}%</div>
               </div>
             </div>
           </div>
