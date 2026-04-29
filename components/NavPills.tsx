@@ -18,6 +18,12 @@ export default function NavPills() {
 
   return (
     <>
+      <style jsx global>{`
+        body {
+          zoom: clamp(0.72, 100vw / 1600, 1);
+        }
+      `}</style>
+
       <div className="flex gap-2 justify-end relative z-50">
         {pills.map((pill, index) => (
           <button
@@ -32,17 +38,17 @@ export default function NavPills() {
       </div>
 
       {showSettings && (
-        <div className="absolute right-4 top-24 w-[420px] rounded-3xl border border-cyan-300/30 bg-slate-950/95 backdrop-blur-xl p-5 z-[100] shadow-[0_0_30px_rgba(0,217,255,0.25)] text-white">
+        <div className="absolute right-4 top-24 w-[520px] max-w-[90vw] rounded-3xl border border-cyan-300/30 bg-slate-950/95 backdrop-blur-xl p-5 z-[100] shadow-[0_0_30px_rgba(0,217,255,0.25)] text-white">
           <div className="text-cyan-300 text-lg font-bold mb-4 tracking-[0.2em]">NOTIFICATION SETTINGS CENTER</div>
 
           <div className="mb-4">
-            <div className="text-cyan-200 text-sm mb-2">Daily Forecast Email Recipient</div>
-            <input className="w-full rounded-xl bg-black/50 border border-cyan-400/20 px-3 py-2 text-sm" placeholder="name@email.com" />
+            <div className="text-cyan-200 text-sm mb-2">Daily Forecast Email Recipients</div>
+            <textarea className="w-full rounded-xl bg-black/50 border border-cyan-400/20 px-3 py-2 text-sm h-20" placeholder="name@email.com&#10;second@email.com&#10;third@email.com" />
           </div>
 
           <div className="mb-4">
-            <div className="text-cyan-200 text-sm mb-2">SMS Alert Number</div>
-            <input className="w-full rounded-xl bg-black/50 border border-cyan-400/20 px-3 py-2 text-sm" placeholder="276-555-1234" />
+            <div className="text-cyan-200 text-sm mb-2">SMS Alert Recipients</div>
+            <textarea className="w-full rounded-xl bg-black/50 border border-cyan-400/20 px-3 py-2 text-sm h-20" placeholder="276-555-1234&#10;276-555-5678" />
           </div>
 
           <div className="grid grid-cols-2 gap-3 mb-4 text-xs">
