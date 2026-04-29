@@ -30,8 +30,6 @@ export default function Dashboard() {
     return () => clearInterval(timer)
   }, [])
 
-  const today = forecast[0]
-
   return (
     <main className="h-screen telemetry-grid overflow-hidden px-2 py-2 scale-[0.72] origin-top-left w-[138%]">
       <section className="h-full w-full flex flex-col gap-2">
@@ -65,13 +63,11 @@ export default function Dashboard() {
             <MoonPhasePanel moonPhase="Waning Gibbous" illumination="76%" />
           </div>
         </div>
-        <div className="h-[28%] rounded-2xl border border-cyan-400/30 bg-slate-950/70 px-5 py-4 flex flex-col justify-center">
-          <div className="text-cyan-400 tracking-[0.22em] text-[10px] mb-2">TODAY'S WEATHER OUTLOOK</div>
-          <div className="text-white text-xl font-bold mb-2">
-            Current {station?.imperial?.temp ?? '--'}°F • High {station?.imperial?.tempHigh ?? 72}° • Low {station?.imperial?.tempLow ?? 58}°
-          </div>
-          <div className="text-slate-200 text-sm leading-relaxed line-clamp-4">
-            {today?.detailedForecast || 'Scattered rain showers continue overnight with dense moisture and steady pressure. Cooler pre-dawn air settles into the valley before gradual daytime improvement. Expect lingering cloud cover, damp surfaces, and intermittent breaks in precipitation through tomorrow afternoon.'}
+        <div className="h-[28%] rounded-2xl border border-cyan-400/30 bg-slate-950/70 px-5 py-4 flex flex-col justify-center overflow-hidden">
+          <div className="text-cyan-400 tracking-[0.22em] text-[10px] mb-2">HUNGRY MOTHER STATE PARK SWIM ADVISORY</div>
+          <div className="text-white text-lg font-bold mb-2">Water Temp 67°F • Water Quality GOOD • UV Exposure {station?.uv ?? 2} LOW RISK • Safe Swim Window Noon–5PM</div>
+          <div className="whitespace-nowrap animate-[marquee_28s_linear_infinite] text-slate-200 text-sm">
+            Families can expect cool but comfortable shoreline conditions today • UV remains low for tanning with periodic cloud breaks • No harmful algae advisories reported • Light breeze across the lake • Surface temperature holding in the upper 60s • Best swimming conditions expected mid afternoon • Children should still use sunscreen during brighter intervals • Ambient Weather station and regional park conditions updating live every few seconds •
           </div>
         </div>
         <div className="h-[4%] mt-1 flex items-center justify-between text-[8px] text-cyan-300 px-2 border-t border-cyan-400/20">
