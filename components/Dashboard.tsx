@@ -65,9 +65,11 @@ export default function Dashboard() {
         Hungry Mother Swim Advisory • Water Temp 67°F • Water Quality GOOD • UV Exposure {station?.uv ?? 2} LOW RISK • Safe Swim Window Noon–5PM • Families can expect comfortable shoreline conditions today • No harmful algae advisories reported •
       </div>
 
-      <marquee className="h-[4vh] mt-[0.5vh] rounded-xl border border-fuchsia-400/20 bg-slate-950/70 px-4 flex items-center text-[0.88vw] text-fuchsia-200 font-medium">
-        ✦ GEMINI: Fresh communication opens an unexpected opportunity today. Keep plans flexible. ✦ CANCER: Family energy is nurturing and calm; a good day for home-centered joy and emotional resets. ✦ LIBRA: Balance returns in finances and relationships — trust the slower pace and avoid rushed decisions. ✦
-      </marquee>
+      <div className="h-[4vh] mt-[0.5vh] rounded-xl border border-fuchsia-400/20 bg-slate-950/70 overflow-hidden flex items-center whitespace-nowrap">
+        <div className="animate-[marquee_40s_linear_infinite] text-[0.88vw] text-fuchsia-200 font-medium px-4">
+          ✦ GEMINI: Fresh communication opens an unexpected opportunity today. Keep plans flexible. ✦ CANCER: Family energy is nurturing and calm; a good day for home-centered joy and emotional resets. ✦ LIBRA: Balance returns in finances and relationships — trust the slower pace and avoid rushed decisions. ✦
+        </div>
+      </div>
 
       <div className="h-[3vh] flex items-center justify-between text-[0.75vw] text-cyan-300 px-2 border-t border-cyan-400/20">
         <span>Station Online • Ambient Weather API • NOAA Forecast Sync • Daily Zodiac Feed</span>
