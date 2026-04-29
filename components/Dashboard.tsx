@@ -32,7 +32,7 @@ export default function Dashboard() {
 
   return (
     <main className="h-screen telemetry-grid overflow-hidden px-2 py-3 scale-[0.72] origin-top-left w-[138%]">
-      <section className="h-full w-full flex flex-col gap-4">
+      <section className="h-full w-full flex flex-col gap-3">
         <div className="h-[18%] grid grid-cols-2 gap-1.5">
           <div className="flex flex-col justify-center pt-2">
             <div className="text-cyan-400 tracking-[0.22em] text-[8px] mb-1">LIVE PERSONAL WEATHER STATION</div>
@@ -55,7 +55,7 @@ export default function Dashboard() {
             <UVPanel uv={station?.uv ?? 2} />
           </div>
         </div>
-        <div className="h-[18%] grid grid-cols-12 gap-1.5 mt-4">
+        <div className="h-[19%] grid grid-cols-12 gap-1.5 mt-2">
           <div className="col-span-9 h-full">
             <ForecastStrip periods={forecast} />
           </div>
@@ -63,11 +63,10 @@ export default function Dashboard() {
             <MoonPhasePanel moonPhase="Waning Gibbous" illumination="76%" />
           </div>
         </div>
-        <div className="h-[24%] rounded-2xl border border-cyan-400/30 bg-slate-950/70 px-5 py-4 flex flex-col justify-center overflow-hidden mt-3">
-          <div className="text-cyan-400 tracking-[0.22em] text-[10px] mb-2">HUNGRY MOTHER STATE PARK SWIM ADVISORY</div>
-          <div className="text-white text-lg font-bold mb-2">Water Temp 67°F • Water Quality GOOD • UV Exposure {station?.uv ?? 2} LOW RISK • Safe Swim Window Noon–5PM</div>
-          <div className="whitespace-nowrap animate-[marquee_28s_linear_infinite] text-slate-200 text-sm">
-            Families can expect cool but comfortable shoreline conditions today • UV remains low for tanning with periodic cloud breaks • No harmful algae advisories reported • Light breeze across the lake • Surface temperature holding in the upper 60s • Best swimming conditions expected mid afternoon • Children should still use sunscreen during brighter intervals • Ambient Weather station and regional park conditions updating live every few seconds •
+        <div className="h-[14%] rounded-2xl border border-cyan-400/30 bg-slate-950/70 px-5 py-3 flex flex-col justify-center overflow-hidden mt-2">
+          <div className="text-white text-base font-bold mb-1">Water Temp 67°F • Water Quality GOOD • UV Exposure {station?.uv ?? 2} LOW RISK • Safe Swim Window Noon–5PM</div>
+          <div className="whitespace-nowrap animate-[marquee_28s_linear_infinite] text-slate-200 text-xs">
+            Families can expect cool but comfortable shoreline conditions today • UV remains low for tanning with periodic cloud breaks • No harmful algae advisories reported • Light breeze across the lake • Surface temperature holding in the upper 60s •
           </div>
         </div>
         <div className="h-[4%] mt-1 flex items-center justify-between text-[8px] text-cyan-300 px-2 border-t border-cyan-400/20">
