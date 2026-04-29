@@ -31,20 +31,21 @@ export default function Dashboard() {
   }, [])
 
   return (
-    <main className="h-screen telemetry-grid overflow-hidden px-2 py-3 scale-[0.72] origin-top-left w-[138%]">
-      <section className="h-full w-full flex flex-col gap-3">
-        <div className="h-[18%] grid grid-cols-2 gap-1.5">
-          <div className="flex flex-col justify-center pt-2">
+    <main className="h-screen telemetry-grid overflow-hidden px-2 py-4 scale-[0.72] origin-top-left w-[138%]">
+      <section className="h-full w-full flex flex-col">
+        <div className="h-[17%] grid grid-cols-2 gap-1.5">
+          <div className="flex flex-col justify-center pt-3">
             <div className="text-cyan-400 tracking-[0.22em] text-[8px] mb-1">LIVE PERSONAL WEATHER STATION</div>
             <h1 className="text-2xl xl:text-4xl font-black leading-none">Staley Street Weather</h1>
             <p className="text-slate-300 text-[10px] mt-1">Marion, Virginia • Station KVAMARIO42 • <span className="text-green-400">LIVE</span></p>
           </div>
-          <div className="flex flex-col justify-center gap-1 pt-2">
+          <div className="flex flex-col justify-center gap-1 pt-3">
             <TopStatusBar updatedAt={updatedAt} />
             <NavPills />
           </div>
         </div>
-        <div className="h-[21%] grid grid-cols-12 gap-1.5 mt-2">
+
+        <div className="h-[20%] grid grid-cols-12 gap-1.5 mt-4">
           <div className="col-span-5 h-full">
             <HeroConditionPanel condition="Rain" temperature={station?.imperial?.temp ?? '--'} />
           </div>
@@ -55,7 +56,8 @@ export default function Dashboard() {
             <UVPanel uv={station?.uv ?? 2} />
           </div>
         </div>
-        <div className="h-[20%] grid grid-cols-12 gap-1.5 mt-5">
+
+        <div className="h-[19%] grid grid-cols-12 gap-1.5 mt-7">
           <div className="col-span-9 h-full">
             <ForecastStrip periods={forecast} />
           </div>
@@ -63,10 +65,12 @@ export default function Dashboard() {
             <MoonPhasePanel moonPhase="Waning Gibbous" illumination="76%" />
           </div>
         </div>
-        <div className="h-[6%] rounded-xl border border-cyan-400/20 bg-slate-950/50 px-3 py-1 flex items-center overflow-hidden mt-3 text-xs text-white font-semibold whitespace-nowrap animate-[marquee_26s_linear_infinite]">
+
+        <div className="h-[4%] mt-6 rounded-lg border border-cyan-400/20 bg-slate-950/45 px-3 flex items-center overflow-hidden text-[10px] text-white font-semibold whitespace-nowrap animate-[marquee_26s_linear_infinite]">
           Hungry Mother Swim Advisory • Water Temp 67°F • Water Quality GOOD • UV Exposure {station?.uv ?? 2} LOW RISK • Safe Swim Window Noon–5PM • Families can expect cool but comfortable shoreline conditions today • No harmful algae advisories reported •
         </div>
-        <div className="h-[4%] mt-1 flex items-center justify-between text-[8px] text-cyan-300 px-2 border-t border-cyan-400/20">
+
+        <div className="h-[3%] mt-2 flex items-center justify-between text-[8px] text-cyan-300 px-2 border-t border-cyan-400/20">
           <span>Station Online • Ambient Weather API • NOAA Forecast Sync</span>
           <span>Auto Refresh 8s</span>
         </div>
