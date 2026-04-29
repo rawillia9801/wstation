@@ -7,10 +7,17 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 export async function GET() {
-  const { data: settings } = await supabase.from('station_settings').select('*').limit(1).single()
-  if (!settings) return NextResponse.json({ ok:false, error:'No settings found' })
+  const { data: settings, error: settingsError } = await supabase.from('station_settings').select('*').limit(1).single()
+
+  if (settingsError) return NextResponse.json({ ok:false, stage:'supabase_read', error: settingsError.message })
+  if (!settings) return NextResponse.json({ ok:false, stage:'settings_missing', error:'No settings found' })
 
   const recipients = [...(settings.notification_emails || [])]
+
+  if (!recipients.length) {
+    return NextResponse.json({ ok:false, stage:'recipient_check', error:'No email recipients saved', recipients })
+  }
+
   const payload = buildDailyForecastEmail({
     temp: settings.current_temp || 0,
     humidity: settings.current_humidity || 0,
@@ -25,15 +32,27 @@ export async function GET() {
     uvRisk: settings.uv_risk || 'LOW'
   })
 
-  if (recipients.length) {
-    await resend.emails.send({
+  try {
+    const resendResult = await resend.emails.send({
       from: 'Staley Climate <alerts@staleyclimate.info>',
       to: recipients,
       subject: payload.subject,
       html: payload.html,
       text: payload.text
     })
-  }
 
-  return NextResponse.json({ ok:true, recipients })
+    return NextResponse.json({
+      ok:true,
+      stage:'resend_send',
+      recipients,
+      resendResult
+    })
+  } catch (err:any) {
+    return NextResponse.json({
+      ok:false,
+      stage:'resend_exception',
+      recipients,
+      error: err?.message || 'Unknown resend failure'
+    })
+  }
 }
