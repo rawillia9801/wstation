@@ -1,0 +1,13 @@
+
+> wstation@1.0.0 dev
+> next dev -p 3001
+
+  ▲ Next.js 14.2.5
+  - Local:        http://localhost:3001
+
+ ✓ Starting...
+ ✓ Ready in 3.8s
+ ○ Compiling / ...
+ ✓ Compiled / in 14.7s (1653 modules)
+ ✓ Compiled in 2s (834 modules)
+ GET / 200 in 448ms
