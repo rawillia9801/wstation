@@ -3,11 +3,26 @@ import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
 import { buildDailyForecastEmail } from '@/lib/resendTemplates'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+function getClients() {
+  const resendKey = process.env.RESEND_API_KEY
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!resendKey || !supabaseUrl || !supabaseKey) {
+    return { error: 'Missing RESEND_API_KEY, NEXT_PUBLIC_SUPABASE_URL, or SUPABASE_SERVICE_ROLE_KEY' }
+  }
+
+  return {
+    resend: new Resend(resendKey),
+    supabase: createClient(supabaseUrl, supabaseKey)
+  }
+}
 
 export async function GET() {
-  const { data: settings, error: settingsError } = await supabase.from('station_settings').select('*').limit(1).single()
+  const clients = getClients()
+  if ('error' in clients) return NextResponse.json({ ok:false, stage:'env_check', error: clients.error }, { status: 503 })
+
+  const { data: settings, error: settingsError } = await clients.supabase.from('station_settings').select('*').limit(1).single()
 
   if (settingsError) return NextResponse.json({ ok:false, stage:'supabase_read', error: settingsError.message })
   if (!settings) return NextResponse.json({ ok:false, stage:'settings_missing', error:'No settings found' })
@@ -33,7 +48,7 @@ export async function GET() {
   })
 
   try {
-    const resendResult = await resend.emails.send({
+    const resendResult = await clients.resend.emails.send({
       from: 'Staley Climate <alerts@staleyclimate.info>',
       to: recipients,
       subject: payload.subject,
