@@ -18,6 +18,8 @@ export interface StationObservation {
     elev?: number
     windSpeed?: number
     windGust?: number
+    tempHigh?: number
+    tempLow?: number
   }
   winddir?: number
   [key: string]: unknown

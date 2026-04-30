@@ -11,6 +11,15 @@ function formatNumber(value: unknown, digits = 0) {
   return numeric.toFixed(digits)
 }
 
+function firstNumber(...values: unknown[]) {
+  for (const value of values) {
+    const numeric = Number(value)
+    if (Number.isFinite(numeric)) return numeric
+  }
+
+  return null
+}
+
 function windDirection(degrees?: number) {
   if (!Number.isFinite(degrees)) return 'WNW'
   const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
@@ -80,14 +89,33 @@ export function mapDashboardData(input: {
   const forecast = input.forecast ?? []
   const settings = input.settings ?? {}
   const firstDay = forecast.find((period) => period.isDaytime !== false) ?? forecast[0]
+  const firstNight = forecast.find((period) => period.isDaytime === false)
   const condition = firstDay?.shortForecast || String(station?.qcStatus || 'Rain')
-  const temp = station?.imperial?.temp ?? settings.current_temp ?? null
-  const feelsLike = station?.imperial?.heatIndex ?? station?.imperial?.windChill ?? temp
+  const temp = firstNumber(
+    station?.imperial?.temp,
+    station?.temp,
+    station?.tempf,
+    station?.tempF,
+    station?.current_temp,
+    settings.current_temp,
+    firstDay?.temperature
+  )
+  const feelsLike = firstNumber(
+    station?.imperial?.heatIndex,
+    station?.imperial?.windChill,
+    station?.heatIndex,
+    station?.windChill,
+    station?.feelsLike,
+    settings.current_feels_like,
+    temp
+  )
   const humidity = asNumber(station?.humidity ?? settings.current_humidity, 59)
   const pressure = asNumber(station?.imperial?.pressure ?? settings.current_pressure, 29.93)
   const wind = asNumber(station?.imperial?.windSpeed ?? settings.current_wind, 6)
   const uv = asNumber(station?.uv ?? settings.current_uv, 2)
   const highLow = highsLows(forecast)
+  const high = firstNumber(highLow.high, settings.forecast_high, station?.imperial?.tempHigh, firstDay?.temperature, temp === null ? null : temp + 2)
+  const low = firstNumber(highLow.low, settings.forecast_low, station?.imperial?.tempLow, firstNight?.temperature, temp === null ? null : temp - 13)
 
   return {
     station,
@@ -95,10 +123,10 @@ export function mapDashboardData(input: {
     settings,
     updatedAt: input.updatedAt ?? new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
     current: {
-      temperature: temp === null ? null : asNumber(temp),
-      feelsLike: feelsLike === null ? null : asNumber(feelsLike),
-      high: highLow.high ?? settings.forecast_high ?? (temp === null ? null : asNumber(temp) + 2),
-      low: highLow.low ?? settings.forecast_low ?? (temp === null ? null : asNumber(temp) - 13),
+      temperature: temp,
+      feelsLike,
+      high,
+      low,
       condition,
       windDirection: windDirection(station?.winddir),
       location: 'Marion, Virginia',

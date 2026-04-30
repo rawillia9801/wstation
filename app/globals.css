@@ -870,11 +870,11 @@ button {
 /* Phase 2 visual convergence: luxury cinematic skin only. */
 .command-center-shell {
   background:
-    radial-gradient(circle at 46% -8%, rgba(121, 177, 255, 0.28), transparent 24%),
-    radial-gradient(circle at 33% 19%, rgba(16, 185, 236, 0.18), transparent 30%),
-    radial-gradient(circle at 76% 35%, rgba(0, 255, 255, 0.1), transparent 22%),
-    radial-gradient(circle at 50% 125%, rgba(0, 102, 143, 0.26), transparent 38%),
-    linear-gradient(90deg, rgba(0, 2, 7, 0.98) 0%, rgba(2, 8, 17, 0.93) 18%, rgba(2, 11, 22, 0.82) 50%, rgba(0, 3, 8, 0.97) 100%),
+    radial-gradient(circle at 46% -8%, rgba(64, 128, 190, 0.14), transparent 21%),
+    radial-gradient(circle at 33% 19%, rgba(0, 150, 205, 0.1), transparent 26%),
+    radial-gradient(circle at 76% 35%, rgba(0, 213, 255, 0.055), transparent 20%),
+    radial-gradient(circle at 50% 125%, rgba(0, 70, 105, 0.18), transparent 36%),
+    linear-gradient(90deg, rgba(0, 1, 5, 0.995) 0%, rgba(1, 5, 12, 0.97) 18%, rgba(1, 8, 18, 0.9) 50%, rgba(0, 2, 7, 0.995) 100%),
     url('https://images.unsplash.com/photo-1501691223387-dd0500403074?auto=format&fit=crop&w=2400&q=92') center top / cover;
   color: #f7fbff;
 }
@@ -890,13 +890,13 @@ button {
 .command-center-shell::before {
   z-index: 0;
   background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.04) 0%, rgba(0, 9, 18, 0.22) 28%, rgba(0, 2, 8, 0.78) 100%),
-    radial-gradient(ellipse at center, transparent 44%, rgba(0, 0, 0, 0.62) 100%);
+    linear-gradient(180deg, rgba(0, 0, 0, 0.32) 0%, rgba(0, 4, 10, 0.48) 30%, rgba(0, 1, 5, 0.86) 100%),
+    radial-gradient(ellipse at center, transparent 36%, rgba(0, 0, 0, 0.78) 100%);
 }
 
 .command-center-shell::after {
   z-index: 0;
-  opacity: 0.5;
+  opacity: 0.32;
   background:
     linear-gradient(rgba(255, 255, 255, 0.035) 50%, rgba(0, 0, 0, 0.035) 50%),
     linear-gradient(90deg, transparent, rgba(32, 247, 255, 0.045), transparent);
@@ -906,14 +906,14 @@ button {
 
 .weather-backdrop {
   background:
-    linear-gradient(rgba(32, 247, 255, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(32, 247, 255, 0.045) 1px, transparent 1px),
-    radial-gradient(circle at 42% 7%, rgba(152, 211, 255, 0.35), transparent 20%),
-    radial-gradient(circle at 56% 20%, rgba(32, 247, 255, 0.18), transparent 23%),
-    radial-gradient(circle at 19% 44%, rgba(0, 217, 255, 0.18), transparent 26%),
-    radial-gradient(circle at 88% 58%, rgba(0, 132, 255, 0.12), transparent 28%);
+    linear-gradient(rgba(32, 247, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(32, 247, 255, 0.032) 1px, transparent 1px),
+    radial-gradient(circle at 42% 7%, rgba(112, 178, 245, 0.16), transparent 18%),
+    radial-gradient(circle at 56% 20%, rgba(32, 247, 255, 0.095), transparent 20%),
+    radial-gradient(circle at 19% 44%, rgba(0, 217, 255, 0.12), transparent 24%),
+    radial-gradient(circle at 88% 58%, rgba(0, 132, 255, 0.08), transparent 26%);
   background-size: 34px 34px, 34px 34px, auto, auto, auto, auto;
-  opacity: 0.86;
+  opacity: 0.72;
 }
 
 .command-main::before {
@@ -924,9 +924,9 @@ button {
   pointer-events: none;
   border-radius: 20px;
   background:
-    linear-gradient(180deg, rgba(116, 170, 255, 0.22), transparent 72%),
-    radial-gradient(circle at 44% 18%, rgba(215, 236, 255, 0.22), transparent 18%),
-    radial-gradient(circle at 56% 0%, rgba(32, 247, 255, 0.18), transparent 28%);
+    linear-gradient(180deg, rgba(54, 112, 168, 0.12), transparent 72%),
+    radial-gradient(circle at 44% 18%, rgba(185, 222, 255, 0.12), transparent 16%),
+    radial-gradient(circle at 56% 0%, rgba(32, 247, 255, 0.09), transparent 24%);
   filter: blur(1px);
   mix-blend-mode: screen;
 }
@@ -1024,8 +1024,11 @@ button {
 
 .title-stack h1 {
   color: #ffffff;
-  font-size: clamp(44px, 4.75vw, 86px);
+  max-width: 100%;
+  font-size: clamp(40px, 4.2vw, 74px);
+  line-height: 0.84;
   font-weight: 1000;
+  white-space: nowrap;
   text-shadow:
     0 2px 2px rgba(0, 0, 0, 0.9),
     0 0 24px rgba(255, 255, 255, 0.18),
@@ -1452,4 +1455,155 @@ button {
   .hero-telemetry-row {
     grid-template-columns: minmax(360px, 0.95fr) minmax(460px, 1fr);
   }
+}
+
+/* Phase 2 hotfix: locked 1366x768 vertical contracts. */
+:root {
+  --gap: 6px;
+}
+
+.command-center-shell {
+  padding: 6px;
+}
+
+.command-main {
+  grid-template-rows: 92px minmax(0, 1fr) 27px;
+  gap: var(--gap);
+  overflow: hidden;
+}
+
+.top-command-header {
+  height: 92px;
+  min-height: 92px;
+  max-height: 92px;
+  overflow: hidden;
+}
+
+.title-stack {
+  padding-top: 4px;
+}
+
+.title-stack h1 {
+  max-width: 100%;
+  font-size: clamp(36px, 3.8vw, 61px);
+  line-height: 0.82;
+  white-space: nowrap;
+}
+
+.title-stack p {
+  font-size: clamp(11px, 0.88vw, 14px);
+}
+
+.header-controls {
+  gap: 6px;
+}
+
+.micro-status {
+  height: 28px;
+}
+
+.command-pill {
+  height: 56px;
+}
+
+.dashboard-page {
+  grid-template-rows: 34px 168px 150px 160px 74px;
+  gap: var(--gap);
+  overflow: hidden;
+}
+
+.alert-ribbon {
+  height: 34px;
+  min-height: 34px;
+  max-height: 34px;
+}
+
+.hero-telemetry-row {
+  height: 168px;
+  min-height: 168px;
+  max-height: 168px;
+}
+
+.forecast-moon-row {
+  height: 150px;
+  min-height: 150px;
+  max-height: 150px;
+}
+
+.intelligence-row {
+  height: 160px;
+  min-height: 160px;
+  max-height: 160px;
+}
+
+.lower-row {
+  height: 74px;
+  min-height: 74px;
+  max-height: 74px;
+}
+
+.hero-telemetry-row,
+.forecast-moon-row,
+.intelligence-row,
+.lower-row,
+.panel,
+.telemetry-card-grid,
+.metric-stat-card,
+.forecast-strip,
+.moon-panel {
+  overflow: hidden;
+}
+
+.panel {
+  height: 100%;
+  max-height: 100%;
+}
+
+.hero-current {
+  padding: 12px 22px;
+}
+
+.hero-temp {
+  margin-top: 6px;
+  font-size: clamp(54px, 5.45vw, 88px);
+}
+
+.hero-current p {
+  margin: 7px 0 9px;
+}
+
+.hero-high-low span {
+  font-size: clamp(17px, 1.45vw, 24px);
+}
+
+.hero-condition-icon svg {
+  width: 78px;
+  height: 78px;
+}
+
+.forecast-strip {
+  padding: 9px;
+}
+
+.forecast-cards {
+  height: calc(100% - 24px);
+  margin-top: 6px;
+}
+
+.forecast-card {
+  padding: 9px;
+}
+
+.forecast-card svg {
+  width: 42px;
+  height: 42px;
+}
+
+.radar-panel,
+.air-panel,
+.sunmoon-panel,
+.trend-panel,
+.mini-stats-panel,
+.camera-panel {
+  padding: 9px;
 }
