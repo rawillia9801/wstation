@@ -1467,9 +1467,10 @@ button {
 }
 
 .command-main {
-  grid-template-rows: 92px minmax(0, 1fr) 27px;
+  grid-template-rows: 92px 610px 27px;
   gap: var(--gap);
   overflow: hidden;
+  align-content: start;
 }
 
 .top-command-header {
@@ -1507,39 +1508,61 @@ button {
 }
 
 .dashboard-page {
+  height: 610px;
+  min-height: 610px;
+  max-height: 610px;
   grid-template-rows: 34px 168px 150px 160px 74px;
   gap: var(--gap);
   overflow: hidden;
+  align-content: start;
+  grid-auto-rows: 0;
+}
+
+.command-content {
+  height: 610px;
+  min-height: 610px;
+  max-height: 610px;
+  overflow: hidden;
+  align-self: start;
 }
 
 .alert-ribbon {
   height: 34px;
   min-height: 34px;
   max-height: 34px;
+  overflow: hidden;
 }
 
 .hero-telemetry-row {
   height: 168px;
   min-height: 168px;
   max-height: 168px;
+  grid-template-rows: 168px;
+  overflow: hidden;
 }
 
 .forecast-moon-row {
   height: 150px;
   min-height: 150px;
   max-height: 150px;
+  grid-template-rows: 150px;
+  overflow: hidden;
 }
 
 .intelligence-row {
   height: 160px;
   min-height: 160px;
   max-height: 160px;
+  grid-template-rows: 160px;
+  overflow: hidden;
 }
 
 .lower-row {
   height: 74px;
   min-height: 74px;
   max-height: 74px;
+  grid-template-rows: 74px;
+  overflow: hidden;
 }
 
 .hero-telemetry-row,
@@ -1556,7 +1579,18 @@ button {
 
 .panel {
   height: 100%;
+  min-height: 0;
   max-height: 100%;
+}
+
+.hero-telemetry-row > *,
+.forecast-moon-row > *,
+.intelligence-row > *,
+.lower-row > * {
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+  align-self: stretch;
 }
 
 .hero-current {
