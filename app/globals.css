@@ -1684,3 +1684,173 @@ button {
 .camera-panel {
   padding: 9px;
 }
+
+/* Phase 2B: vertical rebalance, content-fed fixed viewport math. */
+.command-main {
+  grid-template-rows: 62px 685px 5px;
+}
+
+.top-command-header {
+  height: 62px;
+  min-height: 62px;
+  max-height: 62px;
+}
+
+.title-stack {
+  padding-top: 1px;
+}
+
+.eyebrow {
+  font-size: clamp(9px, 0.68vw, 11px);
+  letter-spacing: 0.22em;
+}
+
+.title-stack h1 {
+  font-size: clamp(32px, 3.25vw, 50px);
+  line-height: 0.78;
+  margin: 1px 0 2px;
+}
+
+.title-stack p {
+  font-size: clamp(9px, 0.75vw, 12px);
+}
+
+.micro-status {
+  height: 18px;
+  font-size: clamp(8px, 0.62vw, 10px);
+}
+
+.command-pill {
+  height: 40px;
+}
+
+.command-content,
+.dashboard-page {
+  height: 685px;
+  min-height: 685px;
+  max-height: 685px;
+}
+
+.dashboard-page {
+  grid-template-rows: 22px 220px 185px 188px 54px;
+}
+
+.alert-ribbon {
+  height: 22px;
+  min-height: 22px;
+  max-height: 22px;
+  padding: 0 10px 0 14px;
+  font-size: clamp(10px, 0.78vw, 12px);
+}
+
+.alert-ribbon button {
+  height: 18px;
+  padding: 0 10px;
+  font-size: 10px;
+}
+
+.hero-telemetry-row {
+  height: 220px;
+  min-height: 220px;
+  max-height: 220px;
+  grid-template-rows: 220px;
+}
+
+.forecast-moon-row {
+  height: 185px;
+  min-height: 185px;
+  max-height: 185px;
+  grid-template-rows: 185px;
+}
+
+.intelligence-row {
+  height: 188px;
+  min-height: 188px;
+  max-height: 188px;
+  grid-template-rows: 188px;
+}
+
+.lower-row {
+  height: 54px;
+  min-height: 54px;
+  max-height: 54px;
+  grid-template-rows: 54px;
+}
+
+.hero-current {
+  padding: 18px 28px;
+}
+
+.hero-temp {
+  font-size: clamp(68px, 6.35vw, 108px);
+}
+
+.hero-condition-icon svg {
+  width: 94px;
+  height: 94px;
+}
+
+.metric-stat-card {
+  padding: 13px;
+}
+
+.forecast-strip,
+.moon-panel,
+.radar-panel,
+.air-panel,
+.sunmoon-panel,
+.trend-panel {
+  padding: 12px;
+}
+
+.forecast-cards {
+  height: calc(100% - 28px);
+  margin-top: 8px;
+}
+
+.forecast-card {
+  padding: 11px;
+}
+
+.forecast-card svg {
+  width: 50px;
+  height: 50px;
+}
+
+.radar-map {
+  height: calc(100% - 48px);
+}
+
+.aqi-layout {
+  height: 72%;
+}
+
+.mini-stats-panel,
+.camera-panel {
+  padding: 7px;
+}
+
+.mini-stat-grid {
+  height: calc(100% - 18px);
+}
+
+.mini-stat-grid strong {
+  font-size: clamp(17px, 1.25vw, 22px);
+}
+
+.mini-stat-grid span {
+  font-size: 8px;
+}
+
+.bottom-status-rail {
+  height: 5px;
+  min-height: 5px;
+  max-height: 5px;
+  padding: 0;
+  opacity: 0.72;
+  overflow: hidden;
+}
+
+.bottom-status-rail > * {
+  transform: translateY(-3px);
+}
