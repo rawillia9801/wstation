@@ -30,8 +30,8 @@ export default function DashboardPage({ data }: { data: DashboardPayload }) {
       </section>
 
       <section className="intelligence-row">
-        <RadarPanel />
-        <AirQualityPanel uv={Number(data.telemetry.find((metric) => metric.id === 'uv')?.value || 2)} />
+        <RadarPanel radar={data.radar} />
+        <AirQualityPanel airQuality={data.airQuality} />
         <SunMoonArcPanel moon={data.moon} />
         <TrendChartPanel data={data.trends} />
       </section>
@@ -39,7 +39,7 @@ export default function DashboardPage({ data }: { data: DashboardPayload }) {
       <section className="lower-row">
         <PrecipStatsPanel precipitation={data.precipitation} />
         <LightningStatsPanel lightning={data.lightning} />
-        <StationCameraPanel condition={data.current.condition} />
+        <StationCameraPanel cameraUrl={data.cameraUrl} />
       </section>
     </div>
   )

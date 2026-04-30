@@ -23,12 +23,16 @@ export default function MetricStatCard({ metric }: { metric: TelemetryMetric }) 
         {metric.value}<small>{metric.unit}</small>
       </div>
       <p>{metric.detail}</p>
-      <div className="metric-chart" aria-hidden>
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={points}>
-            <Area type="monotone" dataKey="value" stroke="currentColor" fill="currentColor" fillOpacity={0.18} strokeWidth={2} isAnimationActive={false} />
-          </AreaChart>
-        </ResponsiveContainer>
+      <div className="metric-chart" title={metric.source}>
+        {points.length > 1 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={points}>
+              <Area type="monotone" dataKey="value" stroke="currentColor" fill="currentColor" fillOpacity={0.18} strokeWidth={2} isAnimationActive={false} />
+            </AreaChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="metric-live-sample"><span /></div>
+        )}
       </div>
       <div className="metric-scale">
         <span>{metric.scale[0]}</span>

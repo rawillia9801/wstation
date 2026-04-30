@@ -1,14 +1,8 @@
 import type { DashboardPayload, ForecastPeriod, StationObservation, StationSettings, TelemetryMetric } from '@/types/dashboard'
 
-function asNumber(value: unknown, fallback = 0) {
+function asNumber(value: unknown, fallback: number | null = null) {
   const numeric = Number(value)
   return Number.isFinite(numeric) ? numeric : fallback
-}
-
-function formatNumber(value: unknown, digits = 0) {
-  const numeric = Number(value)
-  if (!Number.isFinite(numeric)) return '--'
-  return numeric.toFixed(digits)
 }
 
 function firstNumber(...values: unknown[]) {
@@ -20,24 +14,65 @@ function firstNumber(...values: unknown[]) {
   return null
 }
 
+function formatNumber(value: unknown, digits = 0) {
+  const numeric = Number(value)
+  if (!Number.isFinite(numeric)) return '--'
+  return numeric.toFixed(digits)
+}
+
+function formatValue(value: number | null, digits = 0) {
+  return value === null ? '--' : value.toFixed(digits)
+}
+
+function parseWindSpeed(value?: string) {
+  const match = value?.match(/\d+(\.\d+)?/)
+  return match ? Number(match[0]) : null
+}
+
 function windDirection(degrees?: number) {
   if (!Number.isFinite(degrees)) return 'WNW'
   const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
   return directions[Math.round((degrees as number) / 22.5) % 16]
 }
 
-function metric(id: string, title: string, value: string, unit: string, detail: string, base: number, scale: [number, number], tone: TelemetryMetric['tone']): TelemetryMetric {
-  const sparkline = Array.from({ length: 18 }, (_, index) => {
-    const wave = Math.sin(index * 0.92) * 2.4 + Math.cos(index * 0.37) * 1.7
-    return Math.max(scale[0], Math.min(scale[1], base + wave))
-  })
+function observedTime(station: StationObservation | null) {
+  const raw = station?.obsTimeLocal || station?.obsTimeUtc
+  if (!raw) return new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+  const date = new Date(raw)
+  return Number.isNaN(date.getTime()) ? String(raw) : date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+}
 
-  return { id, title, value, unit, detail, sparkline, scale, tone }
+function actualSeries(values: Array<number | null | undefined>, fallback: number | null) {
+  const series = values.filter((value): value is number => Number.isFinite(Number(value)))
+  if (series.length) return series
+  return fallback === null ? [] : [fallback]
+}
+
+function metric(id: string, title: string, value: number | null, unit: string, detail: string, series: number[], scale: [number, number], tone: TelemetryMetric['tone'], source: string): TelemetryMetric {
+  return {
+    id,
+    title,
+    value: formatValue(value, id === 'pressure' ? 2 : 0),
+    unit,
+    detail,
+    sparkline: series,
+    scale,
+    tone,
+    source
+  }
+}
+
+function forecastDayPeriods(forecast: ForecastPeriod[]) {
+  return forecast.filter((period) => period.isDaytime !== false)
+}
+
+function forecastNightPeriods(forecast: ForecastPeriod[]) {
+  return forecast.filter((period) => period.isDaytime === false)
 }
 
 function highsLows(forecast: ForecastPeriod[]) {
-  const dayTemps = forecast.filter((period) => period.isDaytime !== false).map((period) => asNumber(period.temperature, NaN)).filter(Number.isFinite)
-  const nightTemps = forecast.filter((period) => period.isDaytime === false).map((period) => asNumber(period.temperature, NaN)).filter(Number.isFinite)
+  const dayTemps = forecastDayPeriods(forecast).map((period) => asNumber(period.temperature)).filter((value): value is number => value !== null)
+  const nightTemps = forecastNightPeriods(forecast).map((period) => asNumber(period.temperature)).filter((value): value is number => value !== null)
 
   return {
     high: dayTemps.length ? Math.max(...dayTemps.slice(0, 3)) : null,
@@ -51,6 +86,7 @@ function calculateMoon(): DashboardPayload['moon'] {
   const now = Date.now()
   const age = (((now - referenceNewMoon) / 86400000) % synodic + synodic) % synodic
   const illumination = Math.round((1 - Math.cos((2 * Math.PI * age) / synodic)) * 50)
+  const waxing = age < synodic / 2
 
   let phase = 'New Moon'
   if (age > 1.85) phase = 'Waxing Crescent'
@@ -65,18 +101,67 @@ function calculateMoon(): DashboardPayload['moon'] {
     phase,
     illumination,
     age: Number(age.toFixed(1)),
-    moonrise: '12:58 AM',
-    moonset: '2:43 PM',
-    visibleHours: '14h 55m'
+    waxing,
+    moonrise: 'Calculated',
+    moonset: 'Calculated',
+    visibleHours: `${Math.round((illumination / 100) * 14)}h est`
   }
 }
 
-function buildTrends(station: StationObservation | null) {
-  const current = asNumber(station?.imperial?.temp, 68)
-  return ['3 PM', '5 PM', '7 PM', '9 PM', '11 PM', '1 AM', '3 AM', '5 AM', '7 AM', '9 AM', '11 AM', '1 PM', '3 PM'].map((time, index) => {
-    const temp = Math.round(current + Math.sin((index - 8) / 2.2) * 9 + Math.cos(index / 1.8) * 2)
-    return { time, temp, feels: Math.round(temp - 4 + Math.sin(index / 1.7) * 2) }
+function trendSeries(station: StationObservation | null, forecast: ForecastPeriod[], feelsLike: number | null) {
+  const current = firstNumber(station?.imperial?.temp, station?.temp, station?.tempf, station?.tempF)
+  const currentLabel = observedTime(station)
+  const forecastValues = forecast.slice(0, 12).map((period) => ({
+    time: period.name || (period.startTime ? new Date(period.startTime).toLocaleTimeString([], { hour: 'numeric' }) : 'Forecast'),
+    temp: asNumber(period.temperature),
+    feels: asNumber(period.temperature)
+  }))
+
+  return [
+    ...(current === null ? [] : [{ time: currentLabel, temp: current, feels: feelsLike ?? current }]),
+    ...forecastValues
+  ].slice(0, 13)
+}
+
+function radarUrl(settings: StationSettings) {
+  if (typeof settings.radar_url === 'string' && settings.radar_url.length > 8) return settings.radar_url
+  const params = new URLSearchParams({
+    SERVICE: 'WMS',
+    VERSION: '1.3.0',
+    REQUEST: 'GetMap',
+    FORMAT: 'image/png',
+    TRANSPARENT: 'true',
+    LAYERS: 'conus_bref_qcd',
+    CRS: 'EPSG:3857',
+    WIDTH: '900',
+    HEIGHT: '420',
+    BBOX: '-9190000,4370000,-8880000,4580000'
   })
+  return `https://opengeo.ncep.noaa.gov/geoserver/conus/conus_bref_qcd/ows?${params.toString()}`
+}
+
+function airQuality(station: StationObservation | null): DashboardPayload['airQuality'] {
+  const pm25 = asNumber(station?.pm25 ?? station?.pm2_5 ?? station?.aqi_pm25)
+  const pm10 = asNumber(station?.pm10 ?? station?.aqi_pm10)
+  const ozone = asNumber(station?.ozone ?? station?.o3)
+  const co = asNumber(station?.co)
+  const no2 = asNumber(station?.no2)
+  const values = [
+    { label: 'PM2.5', value: pm25, unit: 'ug/m3' },
+    { label: 'PM10', value: pm10, unit: 'ug/m3' },
+    { label: 'OZONE', value: ozone, unit: 'ppb' },
+    { label: 'CO', value: co, unit: 'ppm' },
+    { label: 'NO2', value: no2, unit: 'ppb' }
+  ]
+  const observed = values.map((item) => item.value).filter((value): value is number => value !== null)
+  const index = firstNumber(station?.aqi, station?.airQualityIndex, pm25)
+
+  return {
+    index,
+    label: index === null ? 'No AQ feed' : index <= 50 ? 'Good' : index <= 100 ? 'Moderate' : 'Elevated',
+    source: observed.length ? 'Station air sensor payload' : 'No station air-quality sensor in payload',
+    values
+  }
 }
 
 export function mapDashboardData(input: {
@@ -90,38 +175,26 @@ export function mapDashboardData(input: {
   const settings = input.settings ?? {}
   const firstDay = forecast.find((period) => period.isDaytime !== false) ?? forecast[0]
   const firstNight = forecast.find((period) => period.isDaytime === false)
-  const condition = firstDay?.shortForecast || String(station?.qcStatus || 'Rain')
-  const temp = firstNumber(
-    station?.imperial?.temp,
-    station?.temp,
-    station?.tempf,
-    station?.tempF,
-    station?.current_temp,
-    settings.current_temp,
-    firstDay?.temperature
-  )
-  const feelsLike = firstNumber(
-    station?.imperial?.heatIndex,
-    station?.imperial?.windChill,
-    station?.heatIndex,
-    station?.windChill,
-    station?.feelsLike,
-    settings.current_feels_like,
-    temp
-  )
-  const humidity = asNumber(station?.humidity ?? settings.current_humidity, 59)
-  const pressure = asNumber(station?.imperial?.pressure ?? settings.current_pressure, 29.93)
-  const wind = asNumber(station?.imperial?.windSpeed ?? settings.current_wind, 6)
-  const uv = asNumber(station?.uv ?? settings.current_uv, 2)
+  const condition = firstDay?.shortForecast || String(station?.qcStatus || 'Weather data pending')
+  const temp = firstNumber(station?.imperial?.temp, station?.temp, station?.tempf, station?.tempF, station?.current_temp, settings.current_temp)
+  const feelsLike = firstNumber(station?.imperial?.heatIndex, station?.imperial?.windChill, station?.heatIndex, station?.windChill, station?.feelsLike, settings.current_feels_like, temp)
+  const humidity = firstNumber(station?.humidity, settings.current_humidity)
+  const pressure = firstNumber(station?.imperial?.pressure, settings.current_pressure)
+  const wind = firstNumber(station?.imperial?.windSpeed, settings.current_wind)
+  const windGust = firstNumber(station?.imperial?.windGust)
+  const uv = firstNumber(station?.uv, settings.current_uv)
   const highLow = highsLows(forecast)
-  const high = firstNumber(highLow.high, settings.forecast_high, station?.imperial?.tempHigh, firstDay?.temperature, temp === null ? null : temp + 2)
-  const low = firstNumber(highLow.low, settings.forecast_low, station?.imperial?.tempLow, firstNight?.temperature, temp === null ? null : temp - 13)
+  const high = firstNumber(highLow.high, settings.forecast_high, station?.imperial?.tempHigh, firstDay?.temperature)
+  const low = firstNumber(highLow.low, settings.forecast_low, station?.imperial?.tempLow, firstNight?.temperature)
+  const forecastTemps = forecast.slice(0, 12).map((period) => asNumber(period.temperature))
+  const forecastWinds = forecast.slice(0, 12).map((period) => parseWindSpeed(period.windSpeed))
+  const trends = trendSeries(station, forecast, feelsLike)
 
   return {
     station,
     forecast,
     settings,
-    updatedAt: input.updatedAt ?? new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+    updatedAt: input.updatedAt || observedTime(station),
     current: {
       temperature: temp,
       feelsLike,
@@ -133,28 +206,35 @@ export function mapDashboardData(input: {
       stationId: station?.stationID || process.env.NEXT_PUBLIC_STATION_LABEL || 'KVAMARIO42'
     },
     telemetry: [
-      metric('humidity', 'Humidity', formatNumber(humidity), '%', humidity > 70 ? 'Moist air mass' : 'Comfortable', humidity, [0, 100], 'green'),
-      metric('pressure', 'Pressure', formatNumber(pressure, 2), 'inHg', pressure < 29.7 ? 'Falling' : 'Steady', pressure, [28.5, 30.5], 'green'),
-      metric('wind', 'Wind', formatNumber(wind), 'mph', `${windDirection(station?.winddir)} gust ${formatNumber(station?.imperial?.windGust ?? wind + 3)} mph`, wind, [0, 30], 'blue'),
-      metric('uv', 'UV Index', formatNumber(uv), '', uv > 7 ? 'High' : uv > 4 ? 'Moderate' : 'Low', uv, [0, 11], 'amber')
+      metric('humidity', 'Humidity', humidity, '%', humidity === null ? 'No humidity sample' : humidity > 70 ? 'Moist air mass' : 'Live station sample', actualSeries([humidity], humidity), [0, 100], 'green', 'Current station observation'),
+      metric('pressure', 'Pressure', pressure, 'inHg', pressure === null ? 'No pressure sample' : pressure < 29.7 ? 'Low pressure' : 'Live station sample', actualSeries([pressure], pressure), [28.5, 30.5], 'green', 'Current station observation'),
+      metric('wind', 'Wind', wind, 'mph', wind === null ? 'No wind sample' : `${windDirection(station?.winddir)}${windGust === null ? '' : ` gust ${formatNumber(windGust)} mph`}`, actualSeries([wind, ...forecastWinds], wind), [0, 35], 'blue', 'Station wind plus NOAA forecast wind'),
+      metric('uv', 'UV Index', uv, '', uv === null ? 'No UV sample' : uv > 7 ? 'High' : uv > 4 ? 'Moderate' : 'Live station sample', actualSeries([uv], uv), [0, 11], 'amber', 'Current station observation')
     ],
     moon: calculateMoon(),
     precipitation: {
-      today: asNumber(station?.imperial?.precipTotal, 0.62),
-      week: asNumber(settings.week_precip, 1.34),
-      month: asNumber(settings.month_precip, 3.21),
-      year: asNumber(settings.year_precip, 12.77)
+      today: asNumber(station?.imperial?.precipTotal),
+      week: asNumber(settings.week_precip),
+      month: asNumber(settings.month_precip),
+      year: asNumber(settings.year_precip)
     },
     lightning: {
-      total: asNumber(settings.lightning_total, 12),
-      near: asNumber(settings.lightning_near, 3),
-      cloud: asNumber(settings.lightning_cloud, 7),
-      ground: asNumber(settings.lightning_ground, 2)
+      total: asNumber(settings.lightning_total),
+      near: asNumber(settings.lightning_near),
+      cloud: asNumber(settings.lightning_cloud),
+      ground: asNumber(settings.lightning_ground)
     },
-    trends: buildTrends(station),
+    airQuality: airQuality(station),
+    radar: {
+      imageUrl: radarUrl(settings),
+      source: 'NOAA MRMS base reflectivity WMS',
+      updatedLabel: 'Live NOAA'
+    },
+    cameraUrl: typeof settings.camera_url === 'string' && settings.camera_url.length > 8 ? settings.camera_url : null,
+    trends: trends.length ? trends : forecastTemps.map((value, index) => ({ time: forecast[index]?.name || 'Forecast', temp: value, feels: value })),
     alerts: [
       {
-        title: firstDay?.detailedForecast?.split('.')[0] || settings.forecast_summary || 'Slight chance of rain showers after 5PM',
+        title: firstDay?.detailedForecast?.split('.')[0] || settings.forecast_summary || 'Forecast feed pending',
         severity: 'advisory'
       }
     ]

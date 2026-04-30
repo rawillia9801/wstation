@@ -15,7 +15,7 @@ export default function LightningStatsPanel({ lightning }: { lightning: Dashboar
       <div className="mini-stat-grid">
         {entries.map(([label, value]) => (
           <div key={label}>
-            <strong>{value}</strong>
+            <strong>{value ?? '--'}</strong>
             <span>{label}</span>
           </div>
         ))}

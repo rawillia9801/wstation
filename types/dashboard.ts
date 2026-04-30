@@ -2,6 +2,7 @@ export type CommandPage = 'dashboard' | 'history' | 'alarms' | 'reports' | 'sett
 
 export interface StationObservation {
   obsTimeLocal?: string
+  obsTimeUtc?: string
   neighborhood?: string
   stationID?: string
   humidity?: number
@@ -62,6 +63,8 @@ export interface StationSettings {
   water_temp?: number
   water_quality?: string
   uv_risk?: string
+  camera_url?: string
+  radar_url?: string
   [key: string]: unknown
 }
 
@@ -74,15 +77,34 @@ export interface TelemetryMetric {
   sparkline: number[]
   scale: [number, number]
   tone: 'cyan' | 'green' | 'blue' | 'amber' | 'rose'
+  source: string
 }
 
 export interface MoonData {
   phase: string
   illumination: number
   age: number
+  waxing: boolean
   moonrise: string
   moonset: string
   visibleHours: string
+}
+
+export interface AirQualityData {
+  index: number | null
+  label: string
+  source: string
+  values: Array<{
+    label: string
+    value: number | string | null
+    unit?: string
+  }>
+}
+
+export interface RadarData {
+  imageUrl: string
+  source: string
+  updatedLabel: string
 }
 
 export interface DashboardPayload {
@@ -103,21 +125,24 @@ export interface DashboardPayload {
   telemetry: TelemetryMetric[]
   moon: MoonData
   precipitation: {
-    today: number
-    week: number
-    month: number
-    year: number
+    today: number | null
+    week: number | null
+    month: number | null
+    year: number | null
   }
   lightning: {
-    total: number
-    near: number
-    cloud: number
-    ground: number
+    total: number | null
+    near: number | null
+    cloud: number | null
+    ground: number | null
   }
+  airQuality: AirQualityData
+  radar: RadarData
+  cameraUrl: string | null
   trends: Array<{
     time: string
-    temp: number
-    feels: number
+    temp: number | null
+    feels: number | null
   }>
   alerts: Array<{
     title: string
