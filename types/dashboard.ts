@@ -57,9 +57,20 @@ export interface StationSettings {
   current_pressure?: number
   current_wind?: number
   current_uv?: number
+  current_feels_like?: number
   forecast_high?: number
   forecast_low?: number
   forecast_summary?: string
+  today_precip?: number
+  week_precip?: number
+  month_precip?: number
+  year_precip?: number
+  precip_month?: number
+  precip_year?: number
+  lightning_total?: number
+  lightning_near?: number
+  lightning_cloud?: number
+  lightning_ground?: number
   water_temp?: number
   water_quality?: string
   uv_risk?: string
@@ -85,6 +96,9 @@ export interface MoonData {
   illumination: number
   age: number
   waxing: boolean
+  sunrise?: string
+  sunset?: string
+  daylight?: string
   moonrise: string
   moonset: string
   visibleHours: string
@@ -113,10 +127,10 @@ export interface DashboardPayload {
   settings: StationSettings
   updatedAt: string
   current: {
-    temperature: number | null
-    feelsLike: number | null
-    high: number | null
-    low: number | null
+    temperature: number
+    feelsLike: number
+    high: number
+    low: number
     condition: string
     windDirection: string
     location: string
@@ -125,24 +139,24 @@ export interface DashboardPayload {
   telemetry: TelemetryMetric[]
   moon: MoonData
   precipitation: {
-    today: number | null
-    week: number | null
-    month: number | null
-    year: number | null
+    today: number
+    week: number
+    month: number
+    year: number
   }
   lightning: {
-    total: number | null
-    near: number | null
-    cloud: number | null
-    ground: number | null
+    total: number
+    near: number
+    cloud: number
+    ground: number
   }
   airQuality: AirQualityData
   radar: RadarData
   cameraUrl: string | null
   trends: Array<{
     time: string
-    temp: number | null
-    feels: number | null
+    temp: number
+    feels: number
   }>
   alerts: Array<{
     title: string

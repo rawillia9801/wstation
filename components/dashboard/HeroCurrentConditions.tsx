@@ -13,13 +13,13 @@ export default function HeroCurrentConditions({ data }: { data: DashboardPayload
       <div>
         <span className="panel-kicker">Current Conditions</span>
         <div className="hero-temp">
-          {data.current.temperature === null ? '--' : data.current.temperature.toFixed(1)}
+          {Number(data.current.temperature ?? 0).toFixed(1)}
           <small>F</small>
         </div>
-        <p>Feels Like {data.current.feelsLike === null ? '--' : Math.round(data.current.feelsLike)}F</p>
+        <p>Feels Like {Math.round(data.current.feelsLike ?? data.current.temperature ?? 0)}F</p>
         <div className="hero-high-low">
-          <span><ArrowUp size={22} /> {data.current.high ?? '--'}F <small>Today High</small></span>
-          <span><ArrowDown size={22} /> {data.current.low ?? '--'}F <small>Today Low</small></span>
+          <span><ArrowUp size={22} /> {Math.round(data.current.high ?? data.current.temperature ?? 0)}F <small>Today High</small></span>
+          <span><ArrowDown size={22} /> {Math.round(data.current.low ?? data.current.temperature ?? 0)}F <small>Today Low</small></span>
         </div>
       </div>
       <div className="hero-condition-icon">

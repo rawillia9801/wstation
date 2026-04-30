@@ -9,9 +9,9 @@ export default function SunMoonArcPanel({ moon }: { moon: MoonData }) {
         <Sun size={25} className="sun-node" />
       </div>
       <div className="arc-times">
-        <span>6:16 AM<small>Sunrise</small></span>
-        <span>8h 12m<small>Daylight</small></span>
-        <span>8:28 PM<small>Sunset</small></span>
+        <span>{moon.sunrise}<small>Sunrise</small></span>
+        <span>{moon.daylight}<small>Daylight</small></span>
+        <span>{moon.sunset}<small>Sunset</small></span>
       </div>
       <div className="moon-arc">
         <Moon size={24} />

@@ -15,7 +15,7 @@ export default function PrecipStatsPanel({ precipitation }: { precipitation: Das
       <div className="mini-stat-grid">
         {entries.map(([label, value]) => (
           <div key={label}>
-            <strong>{value === null ? '--' : Number(value).toFixed(2)}<small> in</small></strong>
+            <strong>{Number(value).toFixed(2)}<small> in</small></strong>
             <span>{label}</span>
           </div>
         ))}

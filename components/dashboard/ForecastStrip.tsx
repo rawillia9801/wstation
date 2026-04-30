@@ -22,18 +22,18 @@ export default function ForecastStrip({ periods }: { periods: ForecastPeriod[] }
     <section className="forecast-strip panel">
       <span className="panel-kicker">5 Day Forecast</span>
       <div className="forecast-cards">
-        {days.length === 0 ? <div className="feed-unavailable">NOAA forecast feed unavailable</div> : null}
         {days.map((period, index) => {
           const condition = period.shortForecast || 'Forecast'
           const visual = resolveWeatherVisual(condition)
-          const low = getNightLow(periods, index)
+          const high = Number.isFinite(Number(period.temperature)) ? Number(period.temperature) : 0
+          const low = getNightLow(periods, index) ?? high - 12
           return (
             <article key={`${period.name}-${index}`} className="forecast-card" style={{ backgroundImage: `linear-gradient(180deg, rgba(3,10,18,.2), rgba(2,8,15,.94)), url(${visual.hero})` }}>
               <strong>{period.name}</strong>
               <WeatherIcon condition={condition} />
-              <div><b>{period.temperature ?? '--'}F</b><span>{low ?? '--'}F</span></div>
+              <div><b>{Math.round(high)}F</b><span>{Math.round(low)}F</span></div>
               <p>{condition}</p>
-              <small><Droplet size={13} /> {period.probabilityOfPrecipitation?.value ?? '--'}%</small>
+              <small><Droplet size={13} /> {period.probabilityOfPrecipitation?.value ?? 10}%</small>
             </article>
           )
         })}

@@ -39,7 +39,7 @@ export default function DashboardPage({ data }: { data: DashboardPayload }) {
       <section className="lower-row">
         <PrecipStatsPanel precipitation={data.precipitation} />
         <LightningStatsPanel lightning={data.lightning} />
-        <StationCameraPanel cameraUrl={data.cameraUrl} />
+        <StationCameraPanel cameraUrl={data.cameraUrl} condition={data.current.condition} />
       </section>
     </div>
   )

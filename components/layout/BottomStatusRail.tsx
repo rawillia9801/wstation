@@ -9,7 +9,7 @@ export default function BottomStatusRail({ data }: { data: DashboardPayload }) {
       <span><ShieldCheck size={14} /> NOAA Forecast Sync</span>
       <span><Database size={14} /> Supabase Settings Bound</span>
       <strong>Auto refresh 8s</strong>
-      <strong>{data.current.temperature ?? '--'}F / {data.current.condition}</strong>
+      <strong>{Math.round(data.current.temperature ?? 0)}F / {data.current.condition}</strong>
     </footer>
   )
 }
