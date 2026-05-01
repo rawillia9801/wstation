@@ -10,8 +10,8 @@ export default function TrendChartPanel({ data }: { data: DashboardPayload['tren
           <XAxis dataKey="time" tick={{ fill: '#8aa4b8', fontSize: 10 }} axisLine={false} tickLine={false} />
           <YAxis tick={{ fill: '#8aa4b8', fontSize: 10 }} axisLine={false} tickLine={false} />
           <Tooltip contentStyle={{ background: '#06111d', border: '1px solid rgba(32,247,255,.3)', color: '#fff' }} />
-          <Line dataKey="temp" stroke="#ff8617" strokeWidth={3} dot={false} isAnimationActive={false} />
-          <Line dataKey="feels" stroke="#1fa3ff" strokeWidth={2} dot={false} isAnimationActive={false} />
+          <Line type="monotone" dataKey="temp" stroke="#ff8617" strokeWidth={2.6} dot={false} isAnimationActive={false} />
+          <Line type="monotone" dataKey="feels" stroke="#1fa3ff" strokeWidth={2.1} dot={false} isAnimationActive={false} />
         </LineChart>
       </ResponsiveContainer>
     </section>

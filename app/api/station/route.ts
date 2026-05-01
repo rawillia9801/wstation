@@ -1,6 +1,15 @@
 import { NextResponse } from 'next/server'
 import { fetchCurrentStationWeather } from '@/lib/weather'
-import { archiveObservation } from '@/lib/archive'
+import { archiveObservation, fetchLatestArchivedObservation } from '@/lib/archive'
+
+async function safeArchivedStation() {
+  try {
+    return await fetchLatestArchivedObservation()
+  } catch (error) {
+    console.error('Station archive fallback failed', error)
+    return null
+  }
+}
 
 export async function GET() {
   try {
@@ -12,12 +21,15 @@ export async function GET() {
       console.error('Observation archive failed', archiveError)
     }
 
-    return NextResponse.json(station ?? {})
+    if (station && Object.keys(station).length) {
+      return NextResponse.json(station)
+    }
+
+    const archivedStation = await safeArchivedStation()
+    return NextResponse.json(archivedStation ?? {})
   } catch (error) {
     console.error('Station weather fetch failed', error)
-    return NextResponse.json(
-      { error: 'Unable to fetch station weather' },
-      { status: 500 }
-    )
+    const archivedStation = await safeArchivedStation()
+    return NextResponse.json(archivedStation ?? {})
   }
 }

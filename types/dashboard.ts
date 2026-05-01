@@ -95,6 +95,7 @@ export interface MoonData {
   phase: string
   illumination: number
   age: number
+  phaseFraction?: number
   waxing: boolean
   sunrise?: string
   sunset?: string

@@ -44,6 +44,21 @@ function parseWindSpeed(value?: string) {
   return numericValue(value)
 }
 
+function stationNumber(station: StationObservation | null, paths: string[]) {
+  if (!station) return null
+
+  for (const path of paths) {
+    const value = path.split('.').reduce<unknown>((current, key) => {
+      if (current && typeof current === 'object') return (current as Record<string, unknown>)[key]
+      return undefined
+    }, station)
+    const numeric = numericValue(value)
+    if (numeric !== null) return numeric
+  }
+
+  return null
+}
+
 function windDirection(degrees?: number) {
   if (!Number.isFinite(degrees)) return 'WNW'
   const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
@@ -77,7 +92,7 @@ function seasonalBaseline(date = new Date()) {
 }
 
 function conditionFromSources(station: StationObservation | null, firstDay?: ForecastPeriod, settings?: StationSettings) {
-  const raw = firstDay?.shortForecast || settings?.forecast_summary || String(station?.weather || station?.condition || station?.qcStatus || '')
+  const raw = String(station?.weather || station?.condition || station?.weatherCondition || station?.qcStatus || '') || firstDay?.shortForecast || settings?.forecast_summary
   return raw && !raw.toLowerCase().includes('pending') ? raw : 'Partly Cloudy'
 }
 
@@ -166,21 +181,39 @@ function calculatedSunMoonTimes() {
 }
 
 function calculateMoon(): DashboardPayload['moon'] {
-  const synodic = 29.53058867
-  const referenceNewMoon = Date.UTC(2000, 0, 6, 18, 14)
-  const now = Date.now()
-  const age = (((now - referenceNewMoon) / DAY_MS) % synodic + synodic) % synodic
-  const illumination = Math.round((1 - Math.cos((2 * Math.PI * age) / synodic)) * 50)
-  const waxing = age < synodic / 2
+  const synodic = 29.530588853
+  const date = new Date()
+  const year = date.getUTCFullYear()
+  let month = date.getUTCMonth() + 1
+  const day = date.getUTCDate() + (date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600) / 24
+  let adjustedYear = year
 
-  let phase = 'New Moon'
-  if (age > 1.85) phase = 'Waxing Crescent'
-  if (age > 5.54) phase = 'First Quarter'
-  if (age > 9.23) phase = 'Waxing Gibbous'
-  if (age > 12.92) phase = 'Full Moon'
-  if (age > 16.61) phase = 'Waning Gibbous'
-  if (age > 20.3) phase = 'Last Quarter'
-  if (age > 23.99) phase = 'Waning Crescent'
+  if (month <= 2) {
+    adjustedYear -= 1
+    month += 12
+  }
+
+  const a = Math.floor(adjustedYear / 100)
+  const b = 2 - a + Math.floor(a / 4)
+  const jd = Math.floor(365.25 * (adjustedYear + 4716)) + Math.floor(30.6001 * (month + 1)) + day + b - 1524.5
+  const daysSinceKnownNewMoon = jd - 2451550.1
+  const phaseFraction = ((daysSinceKnownNewMoon / synodic) % 1 + 1) % 1
+  const age = phaseFraction * synodic
+  const illumination = Math.round(((1 - Math.cos(2 * Math.PI * phaseFraction)) / 2) * 100)
+  const waxing = phaseFraction < 0.5
+
+  const phaseNames = [
+    'New Moon',
+    'Waxing Crescent',
+    'First Quarter',
+    'Waxing Gibbous',
+    'Full Moon',
+    'Waning Gibbous',
+    'Last Quarter',
+    'Waning Crescent'
+  ]
+  const phaseIndex = Math.round(phaseFraction * 8) % 8
+  const phase = phaseNames[phaseIndex]
 
   const moonriseHour = (18 + age * 0.82) % 24
   const moonsetHour = (moonriseHour + 12.4) % 24
@@ -194,6 +227,7 @@ function calculateMoon(): DashboardPayload['moon'] {
     phase,
     illumination,
     age: Number(age.toFixed(1)),
+    phaseFraction: Number(phaseFraction.toFixed(4)),
     waxing,
     moonrise: fmt(moonriseHour),
     moonset: fmt(moonsetHour),
@@ -203,6 +237,15 @@ function calculateMoon(): DashboardPayload['moon'] {
 
 function buildSeries(seed: number, offsets: number[], min: number, max: number) {
   return offsets.map((offset) => Number(clamp(seed + offset, min, max).toFixed(2)))
+}
+
+function telemetrySeries(seed: number, min: number, max: number, amplitude: number, drift = 0) {
+  return Array.from({ length: 32 }, (_, index) => {
+    const wave = Math.sin(index * 0.72) * amplitude
+    const secondary = Math.sin(index * 1.87 + seed) * amplitude * 0.34
+    const trend = (index - 16) * drift
+    return Number(clamp(seed + wave + secondary + trend, min, max).toFixed(2))
+  })
 }
 
 function metric(id: string, title: string, value: number, unit: string, detail: string, series: number[], scale: [number, number], tone: TelemetryMetric['tone'], source: string): TelemetryMetric {
@@ -220,21 +263,29 @@ function metric(id: string, title: string, value: number, unit: string, detail: 
 }
 
 function trendSeries(station: StationObservation | null, forecast: ForecastPeriod[], feelsLike: number, currentTemp: number) {
-  const current = firstNumber(station?.imperial?.temp, station?.temp, station?.tempf, station?.tempF, currentTemp) as number
+  const current = firstNumber(stationNumber(station, ['imperial.temp', 'temp', 'tempf', 'tempF', 'temperature', 'temperaturef', 'temp_f', 'outdoorTemp', 'current_temp']), currentTemp) as number
   const currentLabel = observedTime(station)
-  const forecastValues = forecast.slice(0, 12).map((period, index) => {
-    const temp = firstNumber(period.temperature, current + Math.sin(index / 2) * 5) as number
+  const guidance = forecast
+    .filter((period) => numericValue(period.temperature) !== null)
+    .slice(0, 8)
+    .map((period) => numericValue(period.temperature) as number)
+  const anchors = guidance.length ? [current, ...guidance] : [current, current - 3, current - 7, current - 2, current + 4, current + 1]
+
+  return Array.from({ length: 13 }, (_, index) => {
+    const progress = (index / 12) * (anchors.length - 1)
+    const left = Math.floor(progress)
+    const right = Math.min(left + 1, anchors.length - 1)
+    const ratio = progress - left
+    const diurnal = Math.sin(((index - 3) / 12) * Math.PI) * 1.2
+    const temp = anchors[left] + (anchors[right] - anchors[left]) * ratio + diurnal
+    const feelOffset = feelsLike - current
+
     return {
-      time: period.name || (period.startTime ? new Date(period.startTime).toLocaleTimeString([], { hour: 'numeric' }) : `T+${index}`),
-      temp,
-      feels: firstNumber(period.temperature, feelsLike + Math.sin(index / 2) * 4) as number
+      time: index === 0 ? currentLabel : `${index * 2}h`,
+      temp: Number(temp.toFixed(1)),
+      feels: Number((temp + feelOffset * 0.85).toFixed(1))
     }
   })
-
-  return [
-    { time: currentLabel, temp: current, feels: feelsLike },
-    ...forecastValues
-  ].slice(0, 13)
 }
 
 function radarUrl(settings: StationSettings) {
@@ -287,7 +338,7 @@ function airQuality(station: StationObservation | null, humidity: number, wind: 
 function precipitationTotals(station: StationObservation | null, settings: StationSettings, forecast: ForecastPeriod[]) {
   const pop = forecast.slice(0, 6).map((period) => asNumber(period.probabilityOfPrecipitation?.value, 0) || 0)
   const avgPop = pop.length ? pop.reduce((sum, value) => sum + value, 0) / pop.length : 12
-  const today = firstNumber(station?.imperial?.precipTotal, station?.imperial?.precipRate, settings.today_precip, avgPop > 50 ? 0.18 : avgPop > 25 ? 0.06 : 0.01) as number
+  const today = firstNumber(stationNumber(station, ['imperial.precipTotal', 'precipTotal', 'eventrainin', 'dailyrainin', 'rainDaily']), stationNumber(station, ['imperial.precipRate', 'precipRate', 'hourlyrainin']), settings.today_precip, avgPop > 50 ? 0.18 : avgPop > 25 ? 0.06 : 0.01) as number
 
   return {
     today,
@@ -321,21 +372,22 @@ export function mapDashboardData(input: {
   const initialFirstDay = rawForecast.find((period) => period.isDaytime !== false) ?? rawForecast[0]
   const initialCondition = conditionFromSources(station, initialFirstDay, settings)
   const baselineTemp = estimateTempFromSources(rawForecast, settings)
-  const temp = firstNumber(station?.imperial?.temp, station?.temp, station?.tempf, station?.tempF, station?.current_temp, settings.current_temp, initialFirstDay?.temperature, baselineTemp) as number
+  const stationTemp = stationNumber(station, ['imperial.temp', 'temp', 'tempf', 'tempF', 'temperature', 'temperaturef', 'temp_f', 'outdoorTemp', 'current_temp'])
+  const temp = firstNumber(stationTemp, settings.current_temp, initialFirstDay?.temperature, baselineTemp) as number
   const forecast = rawForecast.length ? rawForecast : createFallbackForecast(temp, initialCondition)
   const firstDay = forecast.find((period) => period.isDaytime !== false) ?? forecast[0]
   const firstNight = forecast.find((period) => period.isDaytime === false)
   const condition = conditionFromSources(station, firstDay, settings)
   const highLow = highsLows(forecast)
-  const high = firstNumber(highLow.high, settings.forecast_high, station?.imperial?.tempHigh, firstDay?.temperature, temp + 5) as number
-  const low = firstNumber(highLow.low, settings.forecast_low, station?.imperial?.tempLow, firstNight?.temperature, temp - 12) as number
-  const feelsLike = firstNumber(station?.imperial?.heatIndex, station?.imperial?.windChill, station?.heatIndex, station?.windChill, station?.feelsLike, settings.current_feels_like, temp) as number
-  const humidity = clamp(firstNumber(station?.humidity, settings.current_humidity, condition.toLowerCase().includes('rain') ? 72 : 58) as number, 0, 100)
-  const pressure = clamp(firstNumber(station?.imperial?.pressure, settings.current_pressure, condition.toLowerCase().includes('storm') ? 29.72 : 29.93) as number, 28.5, 30.7)
+  const high = firstNumber(stationNumber(station, ['imperial.tempHigh', 'tempHigh', 'dailyHigh']), highLow.high, settings.forecast_high, firstDay?.temperature, temp + 5) as number
+  const low = firstNumber(stationNumber(station, ['imperial.tempLow', 'tempLow', 'dailyLow']), highLow.low, settings.forecast_low, firstNight?.temperature, temp - 12) as number
+  const feelsLike = firstNumber(stationNumber(station, ['imperial.heatIndex', 'imperial.windChill', 'heatIndex', 'windChill', 'feelsLike', 'feels_like']), settings.current_feels_like, temp) as number
+  const humidity = clamp(firstNumber(stationNumber(station, ['humidity', 'relativeHumidity', 'humidityAvg']), settings.current_humidity, condition.toLowerCase().includes('rain') ? 72 : 58) as number, 0, 100)
+  const pressure = clamp(firstNumber(stationNumber(station, ['imperial.pressure', 'pressure', 'pressureIn', 'baromrelin', 'baromabsin']), settings.current_pressure, condition.toLowerCase().includes('storm') ? 29.72 : 29.93) as number, 28.5, 30.7)
   const forecastWinds = forecast.slice(0, 12).map((period) => parseWindSpeed(period.windSpeed)).filter((value): value is number => value !== null)
-  const wind = clamp(firstNumber(station?.imperial?.windSpeed, settings.current_wind, forecastWinds[0], 6) as number, 0, 60)
-  const windGust = firstNumber(station?.imperial?.windGust, wind + 3)
-  const uv = clamp(firstNumber(station?.uv, settings.current_uv, station?.solarRadiation ? Number(station.solarRadiation) / 120 : null, condition.toLowerCase().includes('sun') ? 5 : 2) as number, 0, 11)
+  const wind = clamp(firstNumber(stationNumber(station, ['imperial.windSpeed', 'windSpeed', 'windspeedmph', 'wind_speed']), settings.current_wind, forecastWinds[0], 6) as number, 0, 60)
+  const windGust = firstNumber(stationNumber(station, ['imperial.windGust', 'windGust', 'windgustmph', 'wind_gust']), wind + 3)
+  const uv = clamp(firstNumber(stationNumber(station, ['uv', 'uvIndex']), settings.current_uv, station?.solarRadiation ? Number(station.solarRadiation) / 120 : null, condition.toLowerCase().includes('sun') ? 5 : 2) as number, 0, 11)
   const forecastTemps = forecast.slice(0, 12).map((period) => asNumber(period.temperature, temp) as number)
   const trends = trendSeries(station, forecast, feelsLike, temp)
   const precip = precipitationTotals(station, settings, forecast)
@@ -358,10 +410,10 @@ export function mapDashboardData(input: {
       stationId: station?.stationID || process.env.NEXT_PUBLIC_STATION_LABEL || 'KVAMARIO42'
     },
     telemetry: [
-      metric('humidity', 'Humidity', humidity, '%', humidity > 70 ? 'Moist air mass' : 'Comfortable', buildSeries(humidity, [-4, -2, -3, -1, 0, 2, 1, 3, 2, 1], 0, 100), [0, 100], 'green', station?.humidity ? 'Current station observation' : 'Weather guidance blend'),
-      metric('pressure', 'Pressure', pressure, 'inHg', pressure < 29.7 ? 'Low pressure' : 'Steady', buildSeries(pressure, [-0.03, -0.02, -0.01, 0, 0.01, 0, 0.02, 0.01], 28.5, 30.5), [28.5, 30.5], 'green', station?.imperial?.pressure ? 'Current station observation' : 'Regional pressure guidance'),
-      metric('wind', 'Wind', wind, 'mph', `${windDirection(station?.winddir)} gust ${formatNumber(windGust)} mph`, [wind, ...forecastWinds].slice(0, 10), [0, 35], 'blue', station?.imperial?.windSpeed ? 'Station wind observation' : 'NOAA forecast wind guidance'),
-      metric('uv', 'UV Index', uv, '', uv > 7 ? 'High' : uv > 4 ? 'Moderate' : 'Low', buildSeries(uv, [-1, 0, 1, 2, 1, 0, -1], 0, 11), [0, 11], 'amber', station?.uv ? 'Current station UV observation' : 'Solar UV guidance')
+      metric('humidity', 'Humidity', humidity, '%', humidity > 70 ? 'Moist air mass' : 'Comfortable', telemetrySeries(humidity, 0, 100, 1.8, 0.02), [0, 100], 'green', stationNumber(station, ['humidity']) !== null ? 'Current station observation' : 'Weather guidance blend'),
+      metric('pressure', 'Pressure', pressure, 'inHg', pressure < 29.7 ? 'Low pressure' : 'Steady', telemetrySeries(pressure, 28.5, 30.5, 0.018, 0.001), [28.5, 30.5], 'green', stationNumber(station, ['imperial.pressure', 'pressure']) !== null ? 'Current station observation' : 'Regional pressure guidance'),
+      metric('wind', 'Wind', wind, 'mph', `${windDirection(station?.winddir)} gust ${formatNumber(windGust)} mph`, telemetrySeries(wind, 0, 35, 2.2, 0.015), [0, 35], 'blue', stationNumber(station, ['imperial.windSpeed', 'windSpeed']) !== null ? 'Station wind observation' : 'NOAA forecast wind guidance'),
+      metric('uv', 'UV Index', uv, '', uv > 7 ? 'High' : uv > 4 ? 'Moderate' : 'Low', telemetrySeries(uv, 0, 11, 0.45, 0), [0, 11], 'amber', stationNumber(station, ['uv', 'uvIndex']) !== null ? 'Current station UV observation' : 'Solar UV guidance')
     ],
     moon: {
       ...calculateMoon(),

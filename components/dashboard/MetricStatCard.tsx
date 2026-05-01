@@ -1,5 +1,5 @@
 import { Droplets, Gauge, SunMedium, Wind } from 'lucide-react'
-import { Area, AreaChart, ResponsiveContainer } from 'recharts'
+import { Line, LineChart, ResponsiveContainer } from 'recharts'
 import type { TelemetryMetric } from '@/types/dashboard'
 
 const icons = {
@@ -26,9 +26,9 @@ export default function MetricStatCard({ metric }: { metric: TelemetryMetric }) 
       <div className="metric-chart" title={metric.source}>
         {points.length > 1 ? (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={points}>
-              <Area type="monotone" dataKey="value" stroke="currentColor" fill="currentColor" fillOpacity={0.18} strokeWidth={2} isAnimationActive={false} />
-            </AreaChart>
+            <LineChart data={points} margin={{ top: 4, right: 2, bottom: 4, left: 2 }}>
+              <Line type="monotone" dataKey="value" stroke="currentColor" strokeWidth={1.8} dot={false} isAnimationActive={false} />
+            </LineChart>
           </ResponsiveContainer>
         ) : (
           <div className="metric-live-sample"><span /></div>

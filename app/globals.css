@@ -2002,3 +2002,224 @@ button {
   pointer-events: none;
   background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.42));
 }
+
+/* Phase 2D: station authority, premium fidelity, and strict viewport fit. */
+:root {
+  --gap: 3px;
+}
+
+.command-center-shell {
+  padding: 3px;
+}
+
+.command-main {
+  grid-template-rows: 56px minmax(0, calc(100dvh - 81px)) 13px;
+  gap: var(--gap);
+}
+
+.top-command-header {
+  height: 56px;
+  min-height: 56px;
+  max-height: 56px;
+}
+
+.title-stack h1 {
+  font-size: clamp(30px, 3.05vw, 47px);
+  line-height: 0.8;
+}
+
+.eyebrow {
+  font-size: clamp(8px, 0.62vw, 10px);
+}
+
+.title-stack p {
+  font-size: clamp(8px, 0.68vw, 11px);
+}
+
+.micro-status {
+  height: 17px;
+}
+
+.command-pill {
+  height: 36px;
+}
+
+.command-pills {
+  gap: 6px;
+}
+
+.command-content,
+.dashboard-page {
+  height: calc(100dvh - 81px);
+  min-height: 0;
+  max-height: calc(100dvh - 81px);
+}
+
+.dashboard-page {
+  grid-template-rows: 20px minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.04fr) minmax(0, 0.48fr);
+  gap: var(--gap);
+}
+
+.alert-ribbon {
+  height: 20px;
+  min-height: 20px;
+  max-height: 20px;
+  font-size: 10px;
+}
+
+.alert-ribbon button {
+  height: 16px;
+  font-size: 9px;
+}
+
+.hero-telemetry-row,
+.forecast-moon-row,
+.intelligence-row,
+.lower-row {
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+}
+
+.hero-current {
+  padding: 14px 24px;
+}
+
+.hero-temp {
+  font-size: clamp(58px, 5.6vw, 92px);
+}
+
+.hero-condition-icon svg {
+  width: 78px;
+  height: 78px;
+}
+
+.metric-stat-card {
+  grid-template-rows: auto auto auto minmax(34px, 1fr) auto;
+  padding: 10px;
+}
+
+.metric-chart {
+  min-height: 34px;
+  filter: drop-shadow(0 0 9px currentColor);
+}
+
+.metric-chart .recharts-line-curve {
+  filter: drop-shadow(0 0 5px currentColor);
+}
+
+.forecast-strip,
+.moon-panel,
+.radar-panel,
+.air-panel,
+.sunmoon-panel,
+.trend-panel {
+  padding: 9px;
+}
+
+.forecast-cards {
+  height: calc(100% - 23px);
+  margin-top: 5px;
+}
+
+.forecast-card {
+  padding: 8px;
+}
+
+.forecast-card svg {
+  width: 40px;
+  height: 40px;
+}
+
+.moon-scene {
+  height: 52%;
+}
+
+.moon-orb {
+  width: min(38%, 128px);
+  background:
+    radial-gradient(circle at 32% 25%, rgba(255, 255, 255, 0.98), rgba(220, 224, 224, 0.94) 22%, rgba(155, 160, 158, 0.9) 48%, rgba(52, 58, 65, 0.96) 100%);
+  box-shadow:
+    inset -18px -18px 30px rgba(0, 0, 0, 0.48),
+    inset 10px 8px 18px rgba(255, 255, 255, 0.2),
+    0 0 24px rgba(219, 235, 255, 0.34),
+    0 0 58px rgba(54, 154, 255, 0.18);
+}
+
+.moon-orb::before {
+  background:
+    radial-gradient(circle at 38% 32%, rgba(18, 22, 25, 0.18) 0 4%, transparent 5%),
+    radial-gradient(circle at 57% 43%, rgba(18, 22, 25, 0.16) 0 6%, transparent 7%),
+    radial-gradient(circle at 43% 62%, rgba(18, 22, 25, 0.18) 0 5%, transparent 6%),
+    radial-gradient(circle at 68% 62%, rgba(255, 255, 255, 0.1) 0 9%, transparent 10%);
+}
+
+.moon-orb::after,
+.moon-orb.is-waning::after {
+  background:
+    radial-gradient(ellipse at center, rgba(0, 0, 0, 0.86) 0 58%, rgba(0, 0, 0, 0.48) 70%, transparent 74%);
+  transform: translateX(var(--moon-shift)) scaleX(var(--moon-scale));
+  transform-origin: center;
+  filter: blur(2px);
+  mix-blend-mode: multiply;
+}
+
+.moon-panel strong {
+  font-size: clamp(15px, 1.18vw, 20px);
+}
+
+.moon-stats {
+  font-size: clamp(9px, 0.68vw, 12px);
+}
+
+.radar-map {
+  height: calc(100% - 38px);
+}
+
+.aqi-layout {
+  height: 68%;
+}
+
+.trend-panel .recharts-line-curve {
+  filter: drop-shadow(0 0 5px currentColor);
+}
+
+.mini-stats-panel,
+.camera-panel {
+  padding: 6px;
+}
+
+.mini-stat-grid {
+  height: calc(100% - 16px);
+}
+
+.mini-stat-grid strong {
+  font-size: clamp(15px, 1.1vw, 20px);
+}
+
+.camera-panel strong {
+  position: absolute;
+  left: 10px;
+  bottom: 9px;
+  max-width: 48%;
+  color: #ffffff;
+  font-size: clamp(13px, 1vw, 18px);
+  text-shadow: 0 0 16px rgba(0, 0, 0, 0.95), 0 0 14px rgba(32, 247, 255, 0.32);
+}
+
+.camera-panel.has-atmosphere {
+  background-position: center 48%;
+  filter: saturate(1.08) contrast(1.08);
+}
+
+.bottom-status-rail {
+  height: 13px;
+  min-height: 13px;
+  max-height: 13px;
+  padding: 0 8px;
+  opacity: 0.92;
+}
+
+.bottom-status-rail > * {
+  transform: none;
+}
