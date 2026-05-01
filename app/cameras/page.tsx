@@ -1,5 +1,5 @@
-import CommandCenterShell from '@/components/layout/CommandCenterShell'
+import Dashboard from '@/components/Dashboard'
 
 export default function CamerasRoute() {
-  return <CommandCenterShell />
+  return <Dashboard />
 }

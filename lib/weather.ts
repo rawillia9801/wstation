@@ -1,8 +1,7 @@
 import axios from 'axios'
 
-const API_KEY = process.env.WEATHER_API_KEY
-const RAW_STATION_ID = process.env.STATION_ID || 'KVAMARI042'
-const STATION_ID = RAW_STATION_ID === 'KVAMARIO42' ? 'KVAMARI042' : RAW_STATION_ID
+const API_KEY = process.env.WEATHER_API_KEY || 'e1f10a1e78da46f5b10a1e78da96f525'
+const STATION_ID = process.env.STATION_ID || 'KVAMARIO42'
 const STATION_KEY = process.env.STATION_KEY
 
 export async function fetchCurrentStationWeather() {

@@ -1,5 +1,5 @@
-import CommandCenterShell from '@/components/layout/CommandCenterShell'
+import Dashboard from '@/components/Dashboard'
 
 export default function AlarmsRoute() {
-  return <CommandCenterShell />
+  return <Dashboard />
 }

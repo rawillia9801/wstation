@@ -140,7 +140,7 @@ export default function Dashboard() {
           <div className="title-cluster">
             <div className="eyebrow">LIVE PERSONAL WEATHER STATION</div>
             <h1>Staley Street Weather</h1>
-            <div className="subhead">Marion, Virginia <span>•</span> Station KVAMARI042 <span>•</span> <b className="live-text">LIVE</b></div>
+            <div className="subhead">Marion, Virginia <span>•</span> Station KVAMARIO42 <span>•</span> <b className="live-text">LIVE</b></div>
           </div>
           <div className="header-actions">
             <div className="clock-pill"><AlarmClock size={16} /> {time} <span>•</span> Apr 28, 2026</div>
@@ -211,7 +211,30 @@ function AlertSettings({ title }: { title: string }) {
   const [email, setEmail] = useState('')
   const [daily, setDaily] = useState(true)
   const [severe, setSevere] = useState(true)
-  const [status, setStatus] = useState('')
+  const [status, setStatus] = useState('Loading saved alert preferences...')
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadSaved() {
+      try {
+        const response = await fetch('/api/save-settings', { cache: 'no-store' })
+        const saved = await response.json()
+        if (cancelled || saved?.error) return
+        setEmail((saved.notification_emails || []).join(', '))
+        setDaily(saved.daily_report_enabled !== false)
+        setSevere(saved.abnormal_alerts_enabled !== false)
+        setStatus(saved.notification_emails?.length ? 'Saved recipients loaded.' : 'No saved recipients yet.')
+      } catch {
+        if (!cancelled) setStatus('Saved preferences could not be loaded.')
+      }
+    }
+
+    loadSaved()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   async function savePreferences() {
     setStatus('Saving alert preferences...')
@@ -225,7 +248,16 @@ function AlertSettings({ title }: { title: string }) {
       })
     })
     const result = await response.json()
-    setStatus(result.ok ? 'Alert preferences saved.' : result.error || 'Settings service not configured.')
+    if (result.ok) {
+      const saved = result.saved || {}
+      setEmail((saved.notification_emails || []).join(', '))
+      setDaily(saved.daily_report_enabled !== false)
+      setSevere(saved.abnormal_alerts_enabled !== false)
+      setStatus(`Alert preferences saved${result.source ? ` to ${result.source}` : ''}.`)
+      return
+    }
+
+    setStatus(result.error || 'Settings service not configured.')
   }
 
   async function sendTest() {
@@ -249,7 +281,7 @@ function AlertSettings({ title }: { title: string }) {
           <button type="button" onClick={savePreferences}>Save Preferences</button>
           <button type="button" onClick={sendTest}>Send Test Alert</button>
         </div>
-        <div className="settings-status">{status || 'RESEND_API_KEY powers outbound alert delivery.'}</div>
+        <div className="settings-status">{status}</div>
       </div>
     </ModuleShell>
   )
@@ -436,7 +468,7 @@ function Chart({ a, b }: { a: number[]; b: number[] }) {
 }
 
 function StationDetails() {
-  return <section className={`${panel} station-details`}><div className="panel-title">STATION DETAILS</div><span>Station: <b>KVAMARI042</b></span><span>Location: <b>Marion, Virginia</b></span><span>Elevation: <b>1,476 ft</b></span><span>Lat / Lon: <b>36.7484° N, 81.5396° W</b></span></section>
+  return <section className={`${panel} station-details`}><div className="panel-title">STATION DETAILS</div><span>Station: <b>KVAMARIO42</b></span><span>Location: <b>Marion, Virginia</b></span><span>Elevation: <b>2,208 ft</b></span><span>Lat / Lon: <b>36.845° N, 81.507° W</b></span></section>
 }
 
 function PrecipPanel() {

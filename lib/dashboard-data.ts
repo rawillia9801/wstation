@@ -407,7 +407,7 @@ export function mapDashboardData(input: {
       condition,
       windDirection: windDirection(station?.winddir),
       location: 'Marion, Virginia',
-      stationId: station?.stationID || process.env.NEXT_PUBLIC_STATION_LABEL || 'KVAMARI042'
+      stationId: station?.stationID || process.env.NEXT_PUBLIC_STATION_LABEL || 'KVAMARIO42'
     },
     telemetry: [
       metric('humidity', 'Humidity', humidity, '%', humidity > 70 ? 'Moist air mass' : 'Comfortable', telemetrySeries(humidity, 0, 100, 1.8, 0.02), [0, 100], 'green', stationNumber(station, ['humidity']) !== null ? 'Current station observation' : 'Weather guidance blend'),
