@@ -1,14 +1,12 @@
 import { NextResponse } from 'next/server'
-import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
-import { buildDailyForecastEmail } from '@/lib/resendTemplates'
+import { sendDailyWeatherSummary } from '@/lib/resend-alerts'
 
 export async function GET() {
-  if (!process.env.RESEND_API_KEY || !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ ok: false, stage: 'env_missing', error: 'Notification service is not configured' })
   }
 
-  const resend = new Resend(process.env.RESEND_API_KEY)
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
   const { data: settings, error: settingsError } = await supabase.from('station_settings').select('*').limit(1).single()
 
@@ -21,7 +19,7 @@ export async function GET() {
     return NextResponse.json({ ok:false, stage:'recipient_check', error:'No email recipients saved', recipients })
   }
 
-  const payload = buildDailyForecastEmail({
+  const payload = {
     temp: settings.current_temp || 0,
     humidity: settings.current_humidity || 0,
     pressure: settings.current_pressure || 0,
@@ -33,16 +31,10 @@ export async function GET() {
     waterTemp: settings.water_temp || 67,
     waterQuality: settings.water_quality || 'GOOD',
     uvRisk: settings.uv_risk || 'LOW'
-  })
+  }
 
   try {
-    const resendResult = await resend.emails.send({
-      from: 'Staley Climate <alerts@staleyclimate.info>',
-      to: recipients,
-      subject: payload.subject,
-      html: payload.html,
-      text: payload.text
-    })
+    const resendResult = await sendDailyWeatherSummary(settings, payload)
 
     return NextResponse.json({
       ok:true,

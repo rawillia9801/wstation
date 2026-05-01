@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
-import { buildAlertEmail } from '@/lib/resendTemplates'
+import { sendSevereWeatherAlert } from '@/lib/resend-alerts'
 
 export async function POST(req: NextRequest) {
-  if (!process.env.RESEND_API_KEY || !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ ok: false, stage: 'env_missing', error: 'Notification service is not configured' })
   }
 
-  const resend = new Resend(process.env.RESEND_API_KEY)
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
   const body = await req.json()
   const { type, message } = body
@@ -17,17 +15,7 @@ export async function POST(req: NextRequest) {
   if (!settings) return NextResponse.json({ ok:false, error:'No settings found' })
 
   const recipients = [...(settings.notification_emails || [])]
-  const payload = buildAlertEmail(type, message)
+  const result = await sendSevereWeatherAlert(settings, type, message)
 
-  if (recipients.length) {
-    await resend.emails.send({
-      from: 'Staley Climate <alerts@staleyclimate.info>',
-      to: recipients,
-      subject: payload.subject,
-      html: payload.html,
-      text: payload.text
-    })
-  }
-
-  return NextResponse.json({ ok:true, sent:type, recipients })
+  return NextResponse.json({ ok:true, sent:type, recipients, result })
 }
