@@ -1,17 +1,13 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { sendDailyWeatherSummary } from '@/lib/resend-alerts'
+import { readSettings } from '@/lib/settings-store'
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function GET() {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return NextResponse.json({ ok: false, stage: 'env_missing', error: 'Notification service is not configured' })
-  }
-
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
-  const { data: settings, error: settingsError } = await supabase.from('station_settings').select('*').limit(1).single()
-
-  if (settingsError) return NextResponse.json({ ok:false, stage:'supabase_read', error: settingsError.message })
-  if (!settings) return NextResponse.json({ ok:false, stage:'settings_missing', error:'No settings found' })
+  const settings = await readSettings()
+  if ('error' in settings) return NextResponse.json({ ok:false, stage:'settings_read', error: settings.error })
 
   const recipients = [...(settings.notification_emails || [])]
 

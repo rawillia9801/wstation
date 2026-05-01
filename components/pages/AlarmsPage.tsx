@@ -1,4 +1,5 @@
 import { Bell, CheckCircle2 } from 'lucide-react'
+import AlertPreferencesForm from './AlertPreferencesForm'
 import type { DashboardPayload } from '@/types/dashboard'
 
 export default function AlarmsPage({ data }: { data: DashboardPayload }) {
@@ -24,6 +25,7 @@ export default function AlarmsPage({ data }: { data: DashboardPayload }) {
           </div>
         ))}
       </div>
+      <AlertPreferencesForm settings={data.settings} />
       <div className="panel report-card">
         <CheckCircle2 size={34} />
         <strong>{data.alerts[0]?.title}</strong>

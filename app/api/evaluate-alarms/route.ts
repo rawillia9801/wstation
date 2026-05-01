@@ -1,21 +1,23 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { sendSevereWeatherAlert, severeThresholds } from '@/lib/resend-alerts'
+import { readSettings } from '@/lib/settings-store'
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+function numberSetting(value: unknown) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0
+}
 
 export async function GET() {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return NextResponse.json({ ok: false, stage: 'env_missing', error: 'Alarm service is not configured' })
-  }
-
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
-  const { data: settings } = await supabase.from('station_settings').select('*').limit(1).single()
-  if (!settings) return NextResponse.json({ ok:false, error:'No settings' })
+  const settings = await readSettings()
+  if ('error' in settings) return NextResponse.json({ ok:false, error: settings.error, triggers: [] })
 
   const triggers = severeThresholds({
-    wind: settings.current_wind || 0,
-    uv: settings.current_uv || 0,
-    tempDrop: settings.current_temp_drop || 0,
-    stormProbability: settings.current_storm_probability || 0
+    wind: numberSetting(settings.current_wind),
+    uv: numberSetting(settings.current_uv),
+    tempDrop: numberSetting(settings.current_temp_drop),
+    stormProbability: numberSetting(settings.current_storm_probability)
   })
 
   for (const trigger of triggers) {

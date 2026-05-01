@@ -1,5 +1,5 @@
-import Dashboard from '@/components/Dashboard'
+import CommandCenterShell from '@/components/layout/CommandCenterShell'
 
 export default function MapsRoute() {
-  return <Dashboard />
+  return <CommandCenterShell />
 }

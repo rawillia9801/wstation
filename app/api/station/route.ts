@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { fetchCurrentStationWeather } from '@/lib/weather'
 import { archiveObservation, fetchLatestArchivedObservation } from '@/lib/archive'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 async function safeArchivedStation() {
   try {
     return await fetchLatestArchivedObservation()

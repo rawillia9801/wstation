@@ -12,10 +12,10 @@ const topItems: Array<{ id: CommandPage; label: string; icon: LucideIcon; badge?
   { id: 'settings', label: 'Settings', icon: Settings }
 ]
 
-const railItems = [
+const railItems: Array<{ id: CommandPage; label: string; icon: LucideIcon; badge?: string }> = [
   ...topItems,
-  { id: 'maps' as const, label: 'Maps', icon: MapPin },
-  { id: 'cameras' as const, label: 'Cameras', icon: Video }
+  { id: 'maps', label: 'Maps', icon: MapPin },
+  { id: 'cameras', label: 'Cameras', icon: Video }
 ]
 
 export function SideCommandRail({
@@ -34,14 +34,13 @@ export function SideCommandRail({
       <div className="rail-links">
         {railItems.map((item) => {
           const Icon = item.icon
-          const isPage = ['dashboard', 'history', 'alarms', 'reports', 'settings'].includes(item.id)
           const active = activePage === item.id
           return (
             <button
               key={item.id}
               className={`rail-button ${active ? 'is-active' : ''}`}
               type="button"
-              onClick={() => isPage && onPageChange(item.id as CommandPage)}
+              onClick={() => onPageChange(item.id)}
               title={item.label}
             >
               <Icon size={20} strokeWidth={1.7} />

@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import BottomStatusRail from './BottomStatusRail'
 import { SideCommandRail } from './CommandNavPills'
 import TopCommandHeader from './TopCommandHeader'
@@ -13,13 +14,24 @@ import { mapDashboardData } from '@/lib/dashboard-data'
 import type { CommandPage, ForecastPeriod, StationObservation, StationSettings } from '@/types/dashboard'
 
 const CACHE_KEY = 'wstation:last-valid-dashboard-sources'
+const PAGE_BY_PATH: Record<string, CommandPage> = {
+  '/': 'dashboard',
+  '/command-center': 'dashboard',
+  '/history': 'history',
+  '/alarms': 'alarms',
+  '/reports': 'reports',
+  '/maps': 'maps',
+  '/cameras': 'cameras',
+  '/settings': 'settings'
+}
 
 function hasObjectData(value: unknown) {
   return Boolean(value && typeof value === 'object' && Object.keys(value as Record<string, unknown>).length)
 }
 
 export default function CommandCenterShell() {
-  const [activePage, setActivePage] = useState<CommandPage>('dashboard')
+  const pathname = usePathname()
+  const [activePage, setActivePage] = useState<CommandPage>(PAGE_BY_PATH[pathname] ?? 'dashboard')
   const [station, setStation] = useState<StationObservation | null>(null)
   const [forecast, setForecast] = useState<ForecastPeriod[]>([])
   const [settings, setSettings] = useState<StationSettings>({})
@@ -38,6 +50,10 @@ export default function CommandCenterShell() {
     if (settingsResult.status === 'fulfilled' && !settingsResult.value?.error && hasObjectData(settingsResult.value)) setSettings(settingsResult.value)
     setUpdatedAt(new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }))
   }, [])
+
+  useEffect(() => {
+    setActivePage(PAGE_BY_PATH[pathname] ?? 'dashboard')
+  }, [pathname])
 
   useEffect(() => {
     try {
@@ -81,6 +97,8 @@ export default function CommandCenterShell() {
           {activePage === 'history' ? <HistoryPage data={data} /> : null}
           {activePage === 'alarms' ? <AlarmsPage data={data} /> : null}
           {activePage === 'reports' ? <ReportsPage data={data} /> : null}
+          {activePage === 'maps' ? <DashboardPage data={data} /> : null}
+          {activePage === 'cameras' ? <DashboardPage data={data} /> : null}
           {activePage === 'settings' ? <SettingsPage data={data} /> : null}
         </div>
         <BottomStatusRail data={data} />

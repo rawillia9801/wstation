@@ -1,4 +1,4 @@
-export type CommandPage = 'dashboard' | 'history' | 'alarms' | 'reports' | 'settings'
+export type CommandPage = 'dashboard' | 'history' | 'alarms' | 'reports' | 'maps' | 'cameras' | 'settings'
 
 export interface StationObservation {
   obsTimeLocal?: string

@@ -1,4 +1,5 @@
 import { Gauge, Mail, Settings } from 'lucide-react'
+import AlertPreferencesForm from './AlertPreferencesForm'
 import type { DashboardPayload } from '@/types/dashboard'
 
 export default function SettingsPage({ data }: { data: DashboardPayload }) {
@@ -14,6 +15,7 @@ export default function SettingsPage({ data }: { data: DashboardPayload }) {
         <div><strong><Mail size={18} /> Daily reports</strong><span>{data.settings.daily_report_enabled !== false ? 'Enabled' : 'Disabled'}</span></div>
         <div><strong><Gauge size={18} /> UV Risk</strong><span>{data.settings.uv_risk || data.telemetry.find((item) => item.id === 'uv')?.detail}</span></div>
       </div>
+      <AlertPreferencesForm settings={data.settings} />
       <div className="panel report-card">
         <strong>{data.current.stationId}</strong>
         <span>{data.current.location}</span>
