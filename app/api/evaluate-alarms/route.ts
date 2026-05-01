@@ -1,18 +1,12 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-function getSupabase() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-  if (!supabaseUrl || !supabaseKey) return null
-  return createClient(supabaseUrl, supabaseKey)
-}
-
 export async function GET() {
-  const supabase = getSupabase()
-  if (!supabase) return NextResponse.json({ ok:false, error:'Missing Supabase service configuration' }, { status: 503 })
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json({ ok: false, stage: 'env_missing', error: 'Alarm service is not configured' })
+  }
 
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
   const { data: settings } = await supabase.from('station_settings').select('*').limit(1).single()
   if (!settings) return NextResponse.json({ ok:false, error:'No settings' })
 

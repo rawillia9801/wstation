@@ -2,19 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 function getSupabase() {
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-if (!supabaseUrl || !supabaseKey) {
-return null
-}
-
-return createClient(supabaseUrl, supabaseKey)
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) return null
+return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
 }
 
 export async function POST(req: NextRequest) {
 const supabase = getSupabase()
-if (!supabase) return NextResponse.json({ ok:false, stage:'env_check', error:'Missing Supabase service configuration' }, { status: 503 })
+if (!supabase) return NextResponse.json({ ok: false, stage: 'env_missing', error: 'Settings service is not configured' })
 
 const body = await req.json()
 
