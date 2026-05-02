@@ -131,6 +131,17 @@ function moonPhaseName(age: number) {
   return 'New Moon'
 }
 
+const MOON_PHASE_IMAGES: Record<string, string> = {
+  'New Moon': 'https://assets.science.nasa.gov/dynamicimage/assets/science/psd/lunar-science/internal_resources/366/new-moon.jpg?w=640&h=613&fit=clip&crop=faces%2Cfocalpoint',
+  'Waxing Crescent': 'https://assets.science.nasa.gov/dynamicimage/assets/science/psd/lunar-science/internal_resources/368/waxing-crescent.jpg?w=640&h=613&fit=clip&crop=faces%2Cfocalpoint',
+  'First Quarter': 'https://assets.science.nasa.gov/dynamicimage/assets/science/psd/lunar-science/internal_resources/367/first-quarter.jpg?w=640&h=613&fit=clip&crop=faces%2Cfocalpoint',
+  'Waxing Gibbous': 'https://assets.science.nasa.gov/dynamicimage/assets/science/psd/lunar-science/internal_resources/365/waxing-gibbous.jpg?w=640&h=613&fit=clip&crop=faces%2Cfocalpoint',
+  'Full Moon': 'https://science.nasa.gov/wp-content/uploads/2023/08/full.jpg',
+  'Waning Gibbous': 'https://science.nasa.gov/wp-content/uploads/2023/08/waning-gibbous.jpg',
+  'Last Quarter': 'https://science.nasa.gov/wp-content/uploads/2023/08/third-quarter.jpg',
+  'Waning Crescent': 'https://science.nasa.gov/wp-content/uploads/2023/08/waning-crescent.jpg'
+}
+
 export function calculateMoon(date = new Date()) {
   const synodic = 29.530588853
   const knownNewMoon = Date.UTC(2000, 0, 6, 18, 14)
@@ -138,11 +149,13 @@ export function calculateMoon(date = new Date()) {
   const age = ((days % synodic) + synodic) % synodic
   const phaseRatio = age / synodic
   const illumination = Math.round(((1 - Math.cos(2 * Math.PI * phaseRatio)) / 2) * 100)
+  const phaseName = moonPhaseName(age)
 
   return {
     age: Number(age.toFixed(1)),
     illumination,
-    phaseName: moonPhaseName(age),
+    phaseName,
+    phaseImageUrl: MOON_PHASE_IMAGES[phaseName],
     phaseRatio,
     waxing: age < synodic / 2,
     shadowWidth: Math.round((1 - illumination / 100) * 120)

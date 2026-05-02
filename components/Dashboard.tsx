@@ -492,8 +492,7 @@ function MoonPanel({ moon }: { moon: LiveDashboardPayload['astronomy']['moon'] |
       <div className="star-field" />
       <div className="panel-title">CURRENT MOON <Info size={13} /></div>
       <div className="moon-visual" aria-label={moon?.phaseName || 'moon phase'}>
-        <div className="moon-texture" />
-        <div className={`moon-shadow ${moon?.waxing ? 'left' : 'right'}`} style={{ width: `${moon?.shadowWidth ?? 80}px` }} />
+        {moon?.phaseImageUrl ? <img src={moon.phaseImageUrl} alt={moon.phaseName} /> : <div className="moon-unavailable">Live Data Unavailable</div>}
       </div>
       <div className="moon-copy"><strong>{moon?.phaseName || 'Live Data Unavailable'}</strong><span>Illumination: {moon ? `${moon.illumination}%` : 'Live Data Unavailable'}</span><span>Age: {moon ? `${moon.age} days` : 'Live Data Unavailable'}</span></div>
     </section>

@@ -759,33 +759,26 @@ h1 {
   background: #0b1016;
 }
 
-.moon-texture {
+.moon-visual img {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   border-radius: inherit;
-  background:
-    radial-gradient(circle at 36% 30%, rgba(22, 24, 26, .55), transparent 9%),
-    radial-gradient(circle at 58% 58%, rgba(42, 43, 43, .46), transparent 13%),
-    radial-gradient(circle at 68% 35%, rgba(0, 0, 0, .30), transparent 10%),
-    radial-gradient(circle at 30% 72%, rgba(35, 36, 37, .38), transparent 12%),
-    radial-gradient(circle at 44% 46%, #faf6eb, #c7c2b8 42%, #6d6a66 68%, #202326 100%);
-  filter: contrast(1.35) saturate(.92);
+  filter: contrast(1.08) saturate(.98);
 }
 
-.moon-shadow {
-  position: absolute;
-  top: -5%;
-  bottom: -5%;
-  background: rgba(3, 8, 18, .58);
-  filter: blur(11px);
-}
-
-.moon-shadow.right {
-  right: -12px;
-}
-
-.moon-shadow.left {
-  left: -12px;
+.moon-unavailable {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 14px;
+  text-align: center;
+  color: #9fb2bf;
+  font-size: 11px;
+  background: rgba(0, 0, 0, .45);
 }
 
 .moon-copy {
