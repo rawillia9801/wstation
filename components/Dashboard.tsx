@@ -371,19 +371,7 @@ function AlertSettings({ title }: { title: string }) {
       body: JSON.stringify({ email, phones, daily, severe, sms_enabled: smsEnabled })
     })
     const result = await response.json()
-    const emailStatus = result.ok ? 'Email sent.' : `Email failed: ${result.error || 'Alert service not configured.'}`
-    const sms = result.sms
-
-    if (!smsEnabled) {
-      setStatus(emailStatus)
-    } else if (sms?.skipped) {
-      setStatus(`${emailStatus} SMS skipped: ${sms.reason || 'unknown reason'}.`)
-    } else if (sms?.ok) {
-      setStatus(`${emailStatus} SMS sent to ${(result.phoneRecipients || []).join(', ')}.`)
-    } else {
-      const failed = sms?.results?.find((item: any) => !item.ok)
-      setStatus(`${emailStatus} SMS failed${failed?.status ? ` (${failed.status})` : ''}: ${failed?.message || 'Unknown Twilio error'}.`)
-    }
+    setStatus(result.ok ? 'Test alert dispatched.' : result.error || 'Alert service not configured.')
   }
 
   return (

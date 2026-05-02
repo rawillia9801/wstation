@@ -163,12 +163,8 @@ async function sendSms(to: string[], body: string) {
   const authSid = TWILIO_API_KEY_SID || TWILIO_ACCOUNT_SID
   const authSecret = TWILIO_API_KEY_SECRET || TWILIO_AUTH_TOKEN
 
-  if (!to.length) {
-    return { ok: false, skipped: true, reason: 'no_sms_recipients' }
-  }
-
-  if (!TWILIO_ACCOUNT_SID || !authSid || !authSecret || !TWILIO_FROM_NUMBER) {
-    return { ok: false, skipped: true, reason: 'twilio_not_configured' }
+  if (!TWILIO_ACCOUNT_SID || !authSid || !authSecret || !TWILIO_FROM_NUMBER || !to.length) {
+    return { skipped: true, reason: 'twilio_not_configured' }
   }
 
   const auth = Buffer.from(`${authSid}:${authSecret}`).toString('base64')
@@ -187,20 +183,10 @@ async function sendSms(to: string[], body: string) {
         Body: body.slice(0, 1500)
       })
     })
-    const responseBody = await response.text().catch(() => '')
-    let message = response.statusText
-
-    try {
-      const parsed = JSON.parse(responseBody)
-      message = parsed.message || parsed.more_info || message
-    } catch {
-      if (responseBody) message = responseBody.slice(0, 180)
-    }
-
-    results.push({ phone, ok: response.ok, status: response.status, message })
+    results.push({ phone, ok: response.ok, status: response.status, body: await response.text().catch(() => '') })
   }
 
-  return { ok: results.every((result) => result.ok), skipped: false, results }
+  return { skipped: false, results }
 }
 
 export async function sendDailyReport(settings: { notification_emails?: string[] } & ReportSettings, data: LiveDashboardPayload, explicitEmail?: string) {
@@ -216,5 +202,5 @@ export async function sendWeatherAlert(settings: StationSettings, type: string, 
   const email = buildAlertEmail(type, message)
   const send = await sendEmail({ to: recipients, ...email })
   const sms = settings.sms_enabled ? await sendSms(phoneRecipients, email.text) : { skipped: true, reason: 'sms_disabled' }
-  return { ...send, recipients, phoneRecipients, sms, smsOk: 'ok' in sms ? sms.ok : false }
+  return { ...send, recipients, phoneRecipients, sms }
 }
