@@ -74,19 +74,25 @@ export function buildDailyReportEmail(data: LiveDashboardPayload, settings: Repo
     row('Pressure', value(data.current.pressure, ' inHg')),
     row('Wind', `${value(data.current.windSpeed, ' mph')} gust ${value(data.current.windGust, ' mph')}`),
     row('Dewpoint', value(data.current.dewpoint, 'F')),
-    row('UV Index', value(data.current.uv)),
+    row('Condition', data.current.condition || 'Live Data Unavailable'),
+    row('UV Index', `${value(data.current.uv)}${data.current.uvSource ? ` (${data.current.uvSource})` : ''}`),
     row('Today High / Low', `${value(data.current.high, 'F')} / ${value(data.current.low, 'F')}`)
   ].join('')
-  const uvBody = `<p style="font-size:28px;line-height:1;margin:0 0 6px;font-weight:800;">${value(data.current.uv)}</p><p style="margin:0;color:#cbd5e1;">${data.current.uv === null ? 'Live Data Unavailable' : data.current.uv >= 8 ? 'High UV exposure' : data.current.uv >= 5 ? 'Moderate UV exposure' : 'Low UV exposure'}</p>`
+  const uvBody = `<p style="font-size:34px;line-height:1;margin:0 0 6px;font-weight:900;">${value(data.current.uv)}</p><p style="margin:0;color:#cbd5e1;">${data.current.uv === null ? 'Live Data Unavailable' : data.current.uv >= 8 ? 'High UV exposure' : data.current.uv >= 5 ? 'Moderate UV exposure' : 'Low UV exposure'}${data.current.uvSource ? ` | Source: ${data.current.uvSource}` : ''}</p>`
   const forecastBody = data.forecast.length
     ? data.forecast.slice(0, 5).map((day) => `<div style="padding:9px 0;border-bottom:1px solid rgba(103,232,249,.14);"><strong>${day.day}</strong><br/><span style="color:#dbeafe;">${day.condition || 'Live Data Unavailable'}</span><br/><span>High ${value(day.high, 'F')} | Low ${value(day.low, 'F')} | Precip ${value(day.precip, '%')}</span></div>`).join('')
     : '<p>Live Data Unavailable</p>'
   const html = `
-    <div style="font-family:Arial,sans-serif;background:#020812;color:#ffffff;padding:28px;">
+    <div style="font-family:Arial,sans-serif;background:radial-gradient(circle at 50% 0%,#12304a 0,#020812 34%,#000 100%);color:#ffffff;padding:32px;">
       <div style="max-width:720px;margin:0 auto;">
         <p style="color:#67e8f9;letter-spacing:.18em;text-transform:uppercase;margin:0 0 8px;">Live Personal Weather Station</p>
         <h1 style="color:#ffffff;margin:0 0 12px;font-size:30px;">Staley Street Weather Daily Report</h1>
         <p style="color:#a7f3d0;margin:0 0 18px;">Source: ${data.source} | Updated: ${data.updatedAt || 'Live Data Unavailable'} | Station ${data.current.stationId}</p>
+        <div style="padding:18px;border:1px solid rgba(103,232,249,.38);border-radius:16px;background:linear-gradient(135deg,rgba(6,30,48,.92),rgba(0,5,12,.88));box-shadow:0 0 28px rgba(34,211,238,.18);">
+          <div style="font-size:48px;font-weight:900;line-height:1;">${value(data.current.temperature, 'F')}</div>
+          <div style="font-size:18px;color:#e5faff;margin-top:6px;">${data.current.condition || 'Live Data Unavailable'} | Feels like ${value(data.current.feelsLike, 'F')}</div>
+          <div style="color:#b6c8d6;margin-top:8px;">High ${value(data.current.high, 'F')} | Low ${value(data.current.low, 'F')} | Humidity ${value(data.current.humidity, '%')} | Pressure ${value(data.current.pressure, ' inHg')}</div>
+        </div>
         ${enabled('stationStatus') ? section('Station Status', `<p>${data.stationOnline ? 'Online' : 'Live Data Unavailable'} | ${data.current.location || 'Marion, Virginia'}</p>`) : ''}
         ${enabled('current') ? section('Daily Weather', `<table style="width:100%;border-collapse:collapse;color:#fff;">${currentRows}</table>`) : ''}
         ${section('UV Index', uvBody)}

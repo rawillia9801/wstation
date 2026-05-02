@@ -24,9 +24,12 @@ export type LiveDashboardPayload = {
     windGust: LiveNumber
     windDirection: string | null
     uv: LiveNumber
+    uvSource: string | null
     high: LiveNumber
     low: LiveNumber
     condition: string | null
+    conditionSource: string | null
+    isDaylight: boolean | null
     precipToday: LiveNumber
   }
   forecast: Array<{
@@ -36,7 +39,7 @@ export type LiveDashboardPayload = {
     condition: string | null
     precip: LiveNumber
   }>
-  history: Array<{ time: string; temp: LiveNumber; feels: LiveNumber; humidity: LiveNumber; pressure: LiveNumber; wind: LiveNumber }>
+  history: Array<{ time: string; timestamp: string | null; temp: LiveNumber; feels: LiveNumber; humidity: LiveNumber; pressure: LiveNumber; wind: LiveNumber }>
   astronomy: {
     sunrise: string | null
     sunset: string | null
@@ -57,6 +60,13 @@ export type LiveDashboardPayload = {
   }
   radar: {
     rainViewerTime: number | null
+    tileUrl: string | null
+    source: string | null
+  }
+  camera: {
+    configured: boolean
+    live: boolean
+    snapshotUrl: string | null
   }
   alerts: Array<{ title: string; severity: 'advisory' | 'watch' | 'warning' }>
   settings: any
@@ -78,6 +88,29 @@ function latestLabel(station: any) {
   if (!raw) return null
   const parsed = new Date(raw)
   return Number.isNaN(parsed.getTime()) ? String(raw) : parsed.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+}
+
+function parseDate(value: unknown) {
+  if (!value) return null
+  const parsed = new Date(String(value))
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+function isCurrentDaylight(sunriseIso: string | null, sunsetIso: string | null, now = new Date()) {
+  const sunrise = parseDate(sunriseIso)
+  const sunset = parseDate(sunsetIso)
+  if (!sunrise || !sunset) return null
+  return now >= sunrise && now < sunset
+}
+
+function normalizeCondition(condition: string | null, daylight: boolean | null) {
+  if (!condition) return null
+  if (daylight !== false) return condition
+
+  return condition
+    .replace(/\bMostly Sunny\b/gi, 'Mostly Clear')
+    .replace(/\bPartly Sunny\b/gi, 'Partly Cloudy')
+    .replace(/\bSunny\b/gi, 'Clear')
 }
 
 function isRecent(station: any) {
@@ -135,7 +168,8 @@ function pairForecast(periods: any[]) {
 
 function stationHistory(observations: any[]) {
   return observations.slice(-24).map((item) => ({
-    time: item.obsTimeLocal ? new Date(item.obsTimeLocal).toLocaleTimeString([], { hour: 'numeric' }) : '',
+    time: item.obsTimeLocal ? new Date(item.obsTimeLocal).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '',
+    timestamp: item.obsTimeLocal || item.obsTimeUtc || null,
     temp: number(item.imperial?.tempAvg ?? item.imperial?.temp),
     feels: number(item.imperial?.windchillAvg ?? item.imperial?.heatindexAvg ?? item.imperial?.tempAvg ?? item.imperial?.temp),
     humidity: number(item.humidityAvg ?? item.humidity),
@@ -155,13 +189,46 @@ async function fetchAstronomy() {
     })
     const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`, { cache: 'no-store' })
     const data = await response.json()
-    const sunrise = data?.daily?.sunrise?.[0] ? new Date(data.daily.sunrise[0]).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : null
-    const sunset = data?.daily?.sunset?.[0] ? new Date(data.daily.sunset[0]).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : null
+    const sunriseIso = data?.daily?.sunrise?.[0] || null
+    const sunsetIso = data?.daily?.sunset?.[0] || null
+    const sunrise = sunriseIso ? new Date(sunriseIso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : null
+    const sunset = sunsetIso ? new Date(sunsetIso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : null
     const seconds = number(data?.daily?.daylight_duration?.[0])
     const daylight = seconds === null ? null : `${Math.floor(seconds / 3600)}h ${Math.round((seconds % 3600) / 60)}m`
-    return { sunrise, sunset, daylight }
+    return { sunrise, sunset, sunriseIso, sunsetIso, daylight, isDaylight: isCurrentDaylight(sunriseIso, sunsetIso) }
   } catch {
-    return { sunrise: null, sunset: null, daylight: null }
+    return { sunrise: null, sunset: null, sunriseIso: null, sunsetIso: null, daylight: null, isDaylight: null }
+  }
+}
+
+async function fetchOpenMeteoUv() {
+  try {
+    const params = new URLSearchParams({
+      latitude: String(LAT),
+      longitude: String(LON),
+      hourly: 'uv_index',
+      timezone: 'America/New_York',
+      forecast_days: '1'
+    })
+    const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`, { cache: 'no-store' })
+    const data = await response.json()
+    const times: string[] = data?.hourly?.time || []
+    const values: unknown[] = data?.hourly?.uv_index || []
+    const now = Date.now()
+    let best: { distance: number; value: LiveNumber } | null = null
+
+    for (let index = 0; index < times.length; index += 1) {
+      const parsed = new Date(times[index]).getTime()
+      const uv = number(values[index])
+      if (Number.isNaN(parsed) || uv === null) continue
+      const distance = Math.abs(parsed - now)
+      if (!best || distance < best.distance) best = { distance, value: uv }
+    }
+
+    return best?.value ?? null
+  } catch (error) {
+    console.warn('[live-data] UV secondary source unavailable', error)
+    return null
   }
 }
 
@@ -202,14 +269,24 @@ async function fetchRadarTime() {
   }
 }
 
+function tileFor(lon: number, lat: number, zoom: number) {
+  const latRad = (lat * Math.PI) / 180
+  const n = 2 ** zoom
+  return {
+    x: Math.floor(((lon + 180) / 360) * n),
+    y: Math.floor((1 - Math.asinh(Math.tan(latRad)) / Math.PI) / 2 * n)
+  }
+}
+
 export async function getLiveDashboardPayload(): Promise<LiveDashboardPayload> {
-  const [stationResult, historyResult, forecastResult, astronomy, aqi, radarTime, settings] = await Promise.allSettled([
+  const [stationResult, historyResult, forecastResult, astronomy, aqi, radarTime, uvResult, settings] = await Promise.allSettled([
     fetchCurrentStationWeather(),
     fetchStationHistory(),
     fetchNOAAForecast(),
     fetchAstronomy(),
     fetchAqi(),
     fetchRadarTime(),
+    fetchOpenMeteoUv(),
     readSettings()
   ])
 
@@ -217,12 +294,33 @@ export async function getLiveDashboardPayload(): Promise<LiveDashboardPayload> {
   const history = historyResult.status === 'fulfilled' ? stationHistory(historyResult.value) : []
   const forecastPeriods = forecastResult.status === 'fulfilled' ? forecastResult.value : []
   const forecast = pairForecast(Array.isArray(forecastPeriods) ? forecastPeriods : [])
-  const astronomyBase = astronomy.status === 'fulfilled' ? astronomy.value : { sunrise: null, sunset: null, daylight: null }
+  const astronomyBase = astronomy.status === 'fulfilled' ? astronomy.value : { sunrise: null, sunset: null, sunriseIso: null, sunsetIso: null, daylight: null, isDaylight: null }
   const aqiValue = aqi.status === 'fulfilled' ? aqi.value : { value: null, label: null, pm25: null, pm10: null, ozone: null, co: null, no2: null }
   const settingsValue = settings.status === 'fulfilled' ? settings.value : {}
 
   const daily = station?.daily || {}
   const currentForecast = forecast[0]
+  const currentPeriod = Array.isArray(forecastPeriods)
+    ? forecastPeriods.find((period: any) => {
+      const start = parseDate(period?.startTime)
+      const end = parseDate(period?.endTime)
+      const now = new Date()
+      return start && end && now >= start && now < end
+    })
+    : null
+  const stationUv = number(station?.uv)
+  const secondaryUv = uvResult.status === 'fulfilled' ? uvResult.value : null
+  const uv = stationUv ?? secondaryUv
+  const uvSource = stationUv !== null ? 'Weather Underground PWS' : secondaryUv !== null ? 'Open-Meteo UV forecast' : null
+  if (uvSource) console.info(`[live-data] UV source: ${uvSource}`)
+  const daylight = astronomyBase.isDaylight ?? null
+  const rawCondition = currentPeriod?.shortForecast || currentForecast?.condition || null
+  const normalizedCondition = normalizeCondition(rawCondition, daylight)
+  const radarTimestamp = radarTime.status === 'fulfilled' ? radarTime.value : null
+  const radarZoom = 7
+  const radarTile = radarTimestamp === null ? null : tileFor(LON, LAT, radarZoom)
+  const radarTileUrl = radarTimestamp === null || !radarTile ? null : `https://tilecache.rainviewer.com/v2/radar/${radarTimestamp}/256/${radarZoom}/${radarTile.x}/${radarTile.y}/2/1_1.png`
+  const cameraSnapshotUrl = typeof process.env.CAMERA_SNAPSHOT_URL === 'string' && process.env.CAMERA_SNAPSHOT_URL.trim() ? '/api/camera/snapshot' : null
   const current = {
     stationId: station?.stationID || 'KVAMARIO42',
     location: station?.neighborhood ? `${station.neighborhood}, Virginia` : 'Marion, Virginia',
@@ -234,10 +332,13 @@ export async function getLiveDashboardPayload(): Promise<LiveDashboardPayload> {
     windSpeed: number(station?.imperial?.windSpeed),
     windGust: number(station?.imperial?.windGust),
     windDirection: windDirection(station?.winddir),
-    uv: number(station?.uv),
+    uv,
+    uvSource,
     high: number(daily.tempHigh),
     low: number(daily.tempLow),
-    condition: currentForecast?.condition || null,
+    condition: normalizedCondition,
+    conditionSource: currentPeriod?.shortForecast ? 'NOAA current forecast period' : currentForecast?.condition ? 'NOAA daily forecast' : null,
+    isDaylight: daylight,
     precipToday: number(daily.precipTotal ?? station?.imperial?.precipTotal)
   }
 
@@ -260,7 +361,14 @@ export async function getLiveDashboardPayload(): Promise<LiveDashboardPayload> {
     },
     aqi: aqiValue,
     radar: {
-      rainViewerTime: radarTime.status === 'fulfilled' ? radarTime.value : null
+      rainViewerTime: radarTimestamp,
+      tileUrl: radarTileUrl,
+      source: radarTileUrl ? 'RainViewer' : null
+    },
+    camera: {
+      configured: Boolean(cameraSnapshotUrl),
+      live: false,
+      snapshotUrl: cameraSnapshotUrl
     },
     alerts: [{ title: alertTitle, severity: 'advisory' }],
     settings: settingsValue

@@ -20,7 +20,7 @@ body {
   background: #02060b;
   color: #fff;
   font-family: Arial, Helvetica, sans-serif;
-  overflow: hidden;
+  overflow: auto;
 }
 
 button {
@@ -34,14 +34,14 @@ a {
 
 .dashboard-shell {
   width: 100vw;
-  height: 100vh;
+  min-height: 100vh;
   min-width: 1180px;
   min-height: 760px;
   display: grid;
   grid-template-columns: 118px 1fr;
   gap: 14px;
   padding: 10px 12px 12px;
-  overflow: hidden;
+  overflow: visible;
   background:
     radial-gradient(circle at 48% 1%, rgba(157, 194, 255, .34), transparent 17%),
     linear-gradient(180deg, rgba(3, 12, 24, .5), rgba(0, 0, 0, .9)),
@@ -221,7 +221,7 @@ a {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-rows: 124px 1fr;
+  grid-template-rows: 124px auto;
   gap: 8px;
   min-width: 0;
 }
@@ -383,8 +383,9 @@ h1 {
   min-height: 0;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
-  grid-template-rows: 204px 238px 226px 116px;
+  grid-template-rows: 204px 238px 226px minmax(116px, auto);
   gap: 10px;
+  padding-bottom: 14px;
 }
 
 .hero-panel,
@@ -401,6 +402,11 @@ h1 {
   position: relative;
   overflow: hidden;
   border-radius: 12px;
+  box-shadow:
+    0 0 0 1px rgba(12, 245, 255, .08),
+    0 0 28px rgba(0, 221, 255, .18),
+    inset 0 1px 0 rgba(255, 255, 255, .08),
+    inset 0 0 34px rgba(0, 190, 255, .055);
 }
 
 .panel-title {
@@ -529,6 +535,9 @@ h1 {
 
 .metric-card {
   padding: 16px 18px 12px;
+  background:
+    radial-gradient(circle at 80% 0%, rgba(48, 206, 255, .12), transparent 38%),
+    linear-gradient(180deg, rgba(5, 25, 40, .88), rgba(0, 7, 14, .9));
 }
 
 .metric-title {
@@ -639,6 +648,7 @@ h1 {
   border: 1px solid rgba(52, 224, 255, .34);
   border-radius: 8px;
   padding: 13px;
+  box-shadow: inset 0 0 24px rgba(0, 0, 0, .42), 0 0 16px rgba(0, 225, 255, .12);
 }
 
 .forecast-bg,
@@ -810,6 +820,7 @@ h1 {
   background:
     radial-gradient(circle at 57% 52%, rgba(0, 145, 255, .15), transparent 15px),
     linear-gradient(135deg, rgba(7, 38, 29, .82), rgba(2, 12, 13, .95));
+  border: 1px solid rgba(103, 232, 249, .12);
 }
 
 .radar-map::after {
@@ -831,9 +842,9 @@ h1 {
 .radar-tile {
   position: absolute;
   inset: 0;
-  background-size: 420px 420px;
+  background-size: cover;
   background-position: center;
-  filter: saturate(1.45) contrast(1.2);
+  filter: saturate(1.65) contrast(1.35) brightness(1.15);
 }
 
 .map-label {
@@ -1075,6 +1086,7 @@ h1 {
   border: 1px solid rgba(120, 160, 182, .18);
   border-radius: 6px;
   background: rgba(28, 47, 62, .78);
+  min-width: 0;
   display: grid;
   place-items: center;
   align-content: center;
@@ -1101,6 +1113,31 @@ h1 {
 .camera-panel {
   grid-column: 5 / 7;
   padding: 13px 15px;
+}
+
+.unavailable-camera {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  min-height: 116px;
+  background:
+    radial-gradient(circle at 88% 8%, rgba(42, 245, 255, .08), transparent 30%),
+    linear-gradient(180deg, rgba(4, 17, 27, .88), rgba(1, 7, 13, .92));
+}
+
+.camera-unavailable {
+  position: relative;
+  z-index: 2;
+  color: #e3edf4;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.camera-copy {
+  position: relative;
+  z-index: 2;
+  color: #9fb2bf;
+  font-size: 12px;
 }
 
 .camera-bg {
@@ -1274,7 +1311,7 @@ h1 {
   }
 
   .content-grid {
-    grid-template-rows: 204px 236px 224px 110px;
+    grid-template-rows: 204px 236px 224px minmax(110px, auto);
     gap: 8px;
   }
 
@@ -1303,7 +1340,7 @@ h1 {
   }
 
   .content-grid {
-    grid-template-rows: 190px 218px 208px 82px;
+    grid-template-rows: 190px 218px 208px minmax(96px, auto);
     gap: 8px;
   }
 
@@ -1334,7 +1371,8 @@ h1 {
   }
 
   .telemetry-cards {
-    height: 42px;
+    min-height: 52px;
+    height: auto;
     margin-top: 7px;
   }
 
@@ -1347,3 +1385,8 @@ h1 {
     margin-top: 2px;
   }
 }
+
+
+
+
+

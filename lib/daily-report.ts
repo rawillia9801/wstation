@@ -56,15 +56,15 @@ export async function runDailyReport(options: RunDailyReportOptions = {}) {
   const due = dailyReportDue(settings, options.now || new Date())
 
   if (!settings.daily_report_enabled && !options.force) {
-    return { ok: true, skipped: true, reason: 'Daily report is disabled', due, recipients, source: options.source || 'manual' }
+    return { ok: true, skipped: true, sentCount: 0, skippedCount: recipients.length, errors: [], reason: 'Daily report is disabled', due, recipients, source: options.source || 'manual' }
   }
 
   if (!recipients.length) {
-    return { ok: false, skipped: true, reason: 'No email recipients saved', due, recipients, source: options.source || 'manual' }
+    return { ok: false, skipped: true, sentCount: 0, skippedCount: 0, errors: ['No email recipients saved'], reason: 'No email recipients saved', due, recipients, source: options.source || 'manual' }
   }
 
   if (!options.force && !due.due) {
-    return { ok: true, skipped: true, reason: 'Daily report is not due yet', due, recipients, source: options.source || 'manual' }
+    return { ok: true, skipped: true, sentCount: 0, skippedCount: recipients.length, errors: [], reason: 'Daily report is not due yet', due, recipients, source: options.source || 'manual' }
   }
 
   const live = await getLiveDashboardPayload()
@@ -80,6 +80,9 @@ export async function runDailyReport(options: RunDailyReportOptions = {}) {
   return {
     ok: result.ok,
     skipped: false,
+    sentCount: result.ok ? recipients.length : 0,
+    skippedCount: result.ok ? 0 : recipients.length,
+    errors: result.ok ? [] : [result.error || 'Resend failed'],
     stage: 'resend_send',
     due,
     recipients,

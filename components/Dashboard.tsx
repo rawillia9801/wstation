@@ -79,6 +79,10 @@ function metricLine(value: LiveNumber, amplitude: number) {
   })
 }
 
+function isSunOnly(condition: string | null | undefined) {
+  return Boolean(condition && /\b(clear|sunny|mostly clear|mostly sunny)\b/i.test(condition))
+}
+
 function useLiveData() {
   const [data, setData] = useState<LiveDashboardPayload | null>(null)
   const [error, setError] = useState('')
@@ -210,13 +214,13 @@ function DashboardGrid({ data }: { data: LiveDashboardPayload | null }) {
         <Metric title="Humidity" icon={<Droplets />} value={humidity} unit="%" note={humidity === null ? null : humidity > 70 ? 'Moist air mass' : 'Comfortable'} series={metricLine(humidity, 0.8)} min="0" max="100" />
         <Metric title="Pressure" icon={<Gauge />} value={pressure} unit="inHg" digits={2} note={pressure === null ? null : pressure < 29.7 ? 'Low pressure' : 'Steady'} series={metricLine(pressure, 0.01)} min="28.5" max="30.5" />
         <Metric title="Wind" icon={<Wind />} value={windSpeed} unit="mph" note={windSpeed === null ? null : `${data?.current.windDirection || ''} gust ${num(windGust, 0) ?? 'unavailable'} mph`} series={metricLine(windSpeed, Math.max(0.4, (windGust ?? 0) / 12))} min="0" max="30" />
-        <UVMetric value={uv} />
+        <UVMetric value={uv} source={data?.current.uvSource ?? null} />
       </div>
 
       <ForecastPanel days={data?.forecast ?? []} />
       <MoonPanel moon={data?.astronomy.moon ?? null} />
 
-      <RadarPanel time={data?.radar.rainViewerTime ?? null} />
+      <RadarPanel tileUrl={data?.radar.tileUrl ?? null} source={data?.radar.source ?? null} />
       <AqiPanel aqi={data?.aqi ?? null} />
       <SunMoonPanel data={data} />
       <TrendPanel data={data} />
@@ -233,7 +237,7 @@ function ModulePage({ page, data }: { page: string; data: LiveDashboardPayload |
   if (page === 'settings' || page === 'alarms') return <AlertSettings title={page === 'alarms' ? 'Alarm Control Center' : 'Notification Settings'} />
   if (page === 'history') return <ModuleShell title="Weather History" subtitle="Weather Underground station observations"><MiniTable data={data} /></ModuleShell>
   if (page === 'reports') return <ModuleShell title="Reports" subtitle="Daily station summary and severe-weather dispatches"><ReportActions data={data} /></ModuleShell>
-  if (page === 'maps') return <ModuleShell title="Maps" subtitle="RainViewer regional precipitation radar"><RadarPanel time={data?.radar.rainViewerTime ?? null} /></ModuleShell>
+  if (page === 'maps') return <ModuleShell title="Maps" subtitle="RainViewer regional precipitation radar"><RadarPanel tileUrl={data?.radar.tileUrl ?? null} source={data?.radar.source ?? null} /></ModuleShell>
   if (page === 'cameras') return <ModuleShell title="Station Cameras" subtitle="Station camera feed"><CameraPanel /></ModuleShell>
   return null
 }
@@ -398,6 +402,7 @@ function RailBlock({ title, children }: { title: string; children: ReactNode }) 
 
 function Hero({ data }: { data: LiveDashboardPayload | null }) {
   const condition = data?.current.condition || 'Live Data Unavailable'
+  const sunOnly = isSunOnly(data?.current.condition)
   return (
     <section className={`${panel} hero-panel`}>
       <div className="hero-bg" />
@@ -412,7 +417,7 @@ function Hero({ data }: { data: LiveDashboardPayload | null }) {
           </div>
         </div>
         <div className="condition-glyph">
-          <CloudRain size={128} strokeWidth={1.7} />
+          {sunOnly && data?.current.isDaylight ? <Sun size={128} strokeWidth={1.7} /> : <CloudRain size={128} strokeWidth={1.7} />}
           <strong>{condition}</strong>
         </div>
       </div>
@@ -442,13 +447,13 @@ function Sparkline({ values }: { values: number[] }) {
   return <svg className="sparkline" viewBox="0 0 100 30" preserveAspectRatio="none"><polyline points={points} fill="none" stroke="rgba(42,255,126,.24)" strokeWidth="3" strokeLinecap="round" /><polyline points={points} fill="none" stroke="#42ff7e" strokeWidth="1.15" strokeLinecap="round" /></svg>
 }
 
-function UVMetric({ value }: { value: LiveNumber }) {
+function UVMetric({ value, source }: { value: LiveNumber; source: string | null }) {
   return (
     <section className={`${panel} metric-card`}>
       <div className="metric-title">UV Index</div>
       <div className="metric-icon"><Sun /></div>
       <div className="metric-value">{value === null ? unavailable() : value.toFixed(0)}</div>
-      <div className="metric-note">{value === null ? 'Live Data Unavailable' : value > 7 ? 'High' : value > 4 ? 'Moderate' : 'Low'}</div>
+      <div className="metric-note">{value === null ? 'Live Data Unavailable' : `${value > 7 ? 'High' : value > 4 ? 'Moderate' : 'Low'}${source ? ` - ${source}` : ''}`}</div>
       <div className="uv-bar">{['#37d85c', '#8be32e', '#ffd233', '#ff9124', '#ef394d'].map((color, index) => <span key={color} style={{ background: color }} className={value !== null && Math.floor(value / 2) === index ? 'tick' : ''} />)}</div>
       <div className="metric-scale"><span>0</span><span>5</span><span>11+</span></div>
     </section>
@@ -499,16 +504,15 @@ function MoonPanel({ moon }: { moon: LiveDashboardPayload['astronomy']['moon'] |
   )
 }
 
-function RadarPanel({ time }: { time: LiveNumber }) {
-  const tile = time === null ? null : `https://tilecache.rainviewer.com/v2/radar/${time}/256/7/35/50/2/1_1.png`
+function RadarPanel({ tileUrl, source }: { tileUrl: string | null; source: string | null }) {
   return (
     <section className={`${panel} radar-panel`}>
       <div className="panel-title">LIVE RADAR</div>
       <div className="radar-map">
-        {tile ? <div className="radar-tile" style={{ backgroundImage: `url(${tile})` }} /> : <div className="radar-unavailable">Live Data Unavailable</div>}
-        <span className="map-label bristol">Bristol</span><span className="map-label abingdon">Abingdon</span><span className="map-label wytheville">Wytheville</span>
+        {tileUrl ? <div className="radar-tile" style={{ backgroundImage: `url(${tileUrl})` }} /> : <div className="radar-unavailable">Live Radar Unavailable</div>}
+        {tileUrl && <><span className="map-label bristol">Bristol</span><span className="map-label abingdon">Abingdon</span><span className="map-label wytheville">Wytheville</span></>}
       </div>
-      <div className="radar-legend"><i /> <span>Light</span><span>Moderate</span><span>Heavy</span><span>Severe</span></div>
+      <div className="radar-legend"><i /> <span>{source || 'Unavailable'}</span><span>Light</span><span>Moderate</span><span>Heavy</span></div>
     </section>
   )
 }
@@ -530,13 +534,14 @@ function SunMoonPanel({ data }: { data: LiveDashboardPayload | null }) {
 }
 
 function TrendPanel({ data }: { data: LiveDashboardPayload | null }) {
-  const rows = data?.history.filter((row) => row.temp !== null || row.feels !== null).slice(-16) ?? []
-  const tempValues = rows.map((row) => row.temp).filter((value): value is number => value !== null)
-  const feelValues = rows.map((row) => row.feels).filter((value): value is number => value !== null)
-  return <section className={`${panel} trend-panel`}><div className="panel-title">TEMPERATURE TREND <span>(24H)</span></div><div className="trend-legend"><span className="orange" /> Temp (°F) <span className="blue" /> Feels Like (°F)</div>{rows.length ? <Chart a={tempValues} b={feelValues} /> : <div className="trend-empty">Live Data Unavailable</div>}<div className="trend-axis">{rows.length ? rows.filter((_, index) => index % Math.max(1, Math.floor(rows.length / 6)) === 0).map((row, index) => <span key={`${row.time}-${index}`}>{row.time}</span>) : <span>Live Data Unavailable</span>}</div></section>
+  const rows = data?.history.filter((row) => row.temp !== null && row.feels !== null).slice(-16) ?? []
+  const labels = rows.filter((_, index) => index === 0 || index === rows.length - 1 || index % Math.max(1, Math.floor(rows.length / 5)) === 0)
+  return <section className={`${panel} trend-panel`}><div className="panel-title">TEMPERATURE TREND <span>(24H)</span></div><div className="trend-legend"><span className="orange" /> Temp (°F) <span className="blue" /> Feels Like (°F)</div>{rows.length >= 4 ? <Chart rows={rows} /> : <div className="trend-empty">Live Trend Data Unavailable</div>}<div className="trend-axis">{rows.length >= 4 ? labels.map((row, index) => <span key={`${row.timestamp || row.time}-${index}`}>{row.time}</span>) : <span>Live Trend Data Unavailable</span>}</div></section>
 }
 
-function Chart({ a, b }: { a: number[]; b: number[] }) {
+function Chart({ rows }: { rows: Array<{ temp: number | null; feels: number | null }> }) {
+  const a = rows.map((row) => row.temp as number)
+  const b = rows.map((row) => row.feels as number)
   const values = [...a, ...b]
   const min = Math.min(...values) - 3
   const max = Math.max(...values) + 3
@@ -561,5 +566,5 @@ function TelemetryPanel({ className, title, icon, stats }: { className: string; 
 }
 
 function CameraPanel() {
-  return <section className={`${panel} camera-panel`}><div className="camera-bg" /><div className="panel-title">STATION CAMERA</div><div className="camera-live"><span /> UNAVAILABLE</div><Link href="/cameras">VIEW CAMERA <Navigation size={14} /></Link></section>
+  return <section className={`${panel} camera-panel unavailable-camera`}><div className="panel-title">STATION CAMERA</div><div className="camera-unavailable">Camera bridge unavailable</div><div className="camera-copy">No live camera endpoint is configured.</div><Link href="/cameras">CAMERA STATUS <Navigation size={14} /></Link></section>
 }
