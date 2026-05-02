@@ -39,6 +39,11 @@ async function writeFileSettings(settings: StationSettings) {
   await writeFile(STORE_PATH, JSON.stringify(settings, null, 2))
 }
 
+async function saveToFile(payload: StationSettings, source = 'file') {
+  await writeFileSettings(payload)
+  return { ok: true, saved: payload, source }
+}
+
 export async function readSettings() {
   const supabase = supabaseClient()
   if (!supabase) return readFileSettings()
@@ -58,18 +63,21 @@ export async function saveSettings(input: StationSettings) {
 
   if (supabase) {
     const existing = await supabase.from('station_settings').select('id').limit(1).maybeSingle()
-    if (existing.error) return { ok: false, stage: 'read_existing', error: existing.error.message }
+    if (existing.error) {
+      return saveToFile(payload, `file_after_supabase_${existing.error.message.replace(/\s+/g, '_').toLowerCase()}`)
+    }
 
     const query = existing.data?.id
       ? await supabase.from('station_settings').update(payload).eq('id', existing.data.id).select('*').single()
       : await supabase.from('station_settings').insert(payload).select('*').single()
 
-    if (query.error) return { ok: false, stage: existing.data?.id ? 'update_existing' : 'insert_new', error: query.error.message, payload }
+    if (query.error) {
+      return saveToFile(payload, `file_after_supabase_${query.error.message.replace(/\s+/g, '_').toLowerCase()}`)
+    }
 
     await writeFileSettings(normalizeSettings(query.data || payload)).catch(() => undefined)
     return { ok: true, saved: normalizeSettings(query.data || payload), source: 'supabase' }
   }
 
-  await writeFileSettings(payload)
-  return { ok: true, saved: payload, source: 'file' }
+  return saveToFile(payload)
 }
