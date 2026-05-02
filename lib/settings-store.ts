@@ -1,14 +1,8 @@
 import { mkdir, readFile, writeFile } from 'fs/promises'
 import path from 'path'
-import { createClient } from '@supabase/supabase-js'
 import type { StationSettings } from '@/types/dashboard'
 
 const STORE_PATH = path.join(process.cwd(), '.data', 'station-settings.json')
-
-function supabaseClient() {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) return null
-  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
-}
 
 function cleanEmails(value: unknown) {
   if (!Array.isArray(value)) return []
@@ -45,39 +39,10 @@ async function saveToFile(payload: StationSettings, source = 'file') {
 }
 
 export async function readSettings() {
-  const supabase = supabaseClient()
-  if (!supabase) return readFileSettings()
-
-  const { data, error } = await supabase.from('station_settings').select('*').limit(1).maybeSingle()
-  if (error) {
-    const fileSettings = await readFileSettings()
-    return Object.keys(fileSettings).length ? fileSettings : { ok: false, error: error.message }
-  }
-
-  return normalizeSettings(data || await readFileSettings())
+  return readFileSettings()
 }
 
 export async function saveSettings(input: StationSettings) {
   const payload = normalizeSettings(input)
-  const supabase = supabaseClient()
-
-  if (supabase) {
-    const existing = await supabase.from('station_settings').select('id').limit(1).maybeSingle()
-    if (existing.error) {
-      return saveToFile(payload, `file_after_supabase_${existing.error.message.replace(/\s+/g, '_').toLowerCase()}`)
-    }
-
-    const query = existing.data?.id
-      ? await supabase.from('station_settings').update(payload).eq('id', existing.data.id).select('*').single()
-      : await supabase.from('station_settings').insert(payload).select('*').single()
-
-    if (query.error) {
-      return saveToFile(payload, `file_after_supabase_${query.error.message.replace(/\s+/g, '_').toLowerCase()}`)
-    }
-
-    await writeFileSettings(normalizeSettings(query.data || payload)).catch(() => undefined)
-    return { ok: true, saved: normalizeSettings(query.data || payload), source: 'supabase' }
-  }
-
   return saveToFile(payload)
 }
