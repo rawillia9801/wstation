@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import type { LiveDashboardPayload } from './live-data'
+import type { StationSettings } from '@/types/dashboard'
 
 const FROM = 'Staley Climate <alerts@staleyclimate.info>'
 
@@ -26,15 +27,39 @@ export function resolveRecipients(settings: { notification_emails?: string[] } =
   return uniqueEmails([explicit, ...(settings.notification_emails || []), process.env.ALERT_EMAIL])
 }
 
-export function severeThresholds(data: LiveDashboardPayload) {
+function uniquePhones(values: unknown[]) {
+  return Array.from(new Set(values.flatMap((value) => String(value || '').split(/[,\n]/)).map((value) => value.trim()).filter(Boolean)))
+}
+
+export function resolvePhones(settings: { notification_phones?: string[] } = {}, explicit?: string) {
+  return uniquePhones([explicit, ...(settings.notification_phones || [])])
+}
+
+function percentChange(current: number | null, previous: number | null) {
+  if (current === null || previous === null || previous === 0) return 0
+  return Math.abs(((current - previous) / previous) * 100)
+}
+
+export function severeThresholds(data: LiveDashboardPayload, settings: StationSettings = {}) {
   const triggers: string[] = []
+  const thresholds = settings.alarm_thresholds || {}
   const windGust = data.current.windGust
+  const windSpeed = data.current.windSpeed
   const pressure = data.current.pressure
   const uv = data.current.uv
+  const windMph = thresholds.windMph ?? 30
+  const tempPercent = thresholds.tempPercent ?? 10
+  const humidityPercent = thresholds.humidityPercent ?? 15
+  const freezeTempF = thresholds.freezeTempF ?? 32
+  const previous = data.history[0]
 
-  if (windGust !== null && windGust >= 35) triggers.push('High Wind Gust')
+  if ((windGust !== null && windGust >= windMph) || (windSpeed !== null && windSpeed >= windMph)) triggers.push('Wind Threshold')
   if (pressure !== null && pressure <= 29.4) triggers.push('Low Pressure')
   if (uv !== null && uv >= 8) triggers.push('High UV Exposure')
+  if (percentChange(data.current.temperature, previous?.temp ?? null) >= tempPercent) triggers.push('Rapid Temperature Change')
+  if (percentChange(data.current.humidity, previous?.humidity ?? null) >= humidityPercent) triggers.push('Rapid Humidity Change')
+  if (data.current.temperature !== null && data.current.temperature <= freezeTempF && (data.current.precipToday ?? 0) > 0) triggers.push('Freeze / Ice Risk')
+  if (data.current.condition && /\bsnow|sleet|ice\b/i.test(data.current.condition)) triggers.push('Winter Weather')
 
   return triggers
 }
@@ -127,6 +152,43 @@ export async function sendEmail({ to, subject, html, text }: { to: string[]; sub
   return { ok: true, result }
 }
 
+async function sendSms(to: string[], body: string) {
+  const {
+    TWILIO_ACCOUNT_SID,
+    TWILIO_AUTH_TOKEN,
+    TWILIO_API_KEY_SID,
+    TWILIO_API_KEY_SECRET,
+    TWILIO_FROM_NUMBER
+  } = process.env
+  const authSid = TWILIO_API_KEY_SID || TWILIO_ACCOUNT_SID
+  const authSecret = TWILIO_API_KEY_SECRET || TWILIO_AUTH_TOKEN
+
+  if (!TWILIO_ACCOUNT_SID || !authSid || !authSecret || !TWILIO_FROM_NUMBER || !to.length) {
+    return { skipped: true, reason: 'twilio_not_configured' }
+  }
+
+  const auth = Buffer.from(`${authSid}:${authSecret}`).toString('base64')
+  const results = []
+
+  for (const phone of to) {
+    const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${auth}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        From: TWILIO_FROM_NUMBER,
+        To: phone,
+        Body: body.slice(0, 1500)
+      })
+    })
+    results.push({ phone, ok: response.ok, status: response.status, body: await response.text().catch(() => '') })
+  }
+
+  return { skipped: false, results }
+}
+
 export async function sendDailyReport(settings: { notification_emails?: string[] } & ReportSettings, data: LiveDashboardPayload, explicitEmail?: string) {
   const recipients = resolveRecipients(settings, explicitEmail)
   const email = buildDailyReportEmail(data, settings)
@@ -134,9 +196,11 @@ export async function sendDailyReport(settings: { notification_emails?: string[]
   return { ...send, recipients }
 }
 
-export async function sendWeatherAlert(settings: { notification_emails?: string[] }, type: string, message: string, explicitEmail?: string) {
+export async function sendWeatherAlert(settings: StationSettings, type: string, message: string, explicitEmail?: string, explicitPhone?: string) {
   const recipients = resolveRecipients(settings, explicitEmail)
+  const phoneRecipients = settings.sms_enabled ? resolvePhones(settings, explicitPhone) : []
   const email = buildAlertEmail(type, message)
   const send = await sendEmail({ to: recipients, ...email })
-  return { ...send, recipients }
+  const sms = settings.sms_enabled ? await sendSms(phoneRecipients, email.text) : { skipped: true, reason: 'sms_disabled' }
+  return { ...send, recipients, phoneRecipients, sms }
 }

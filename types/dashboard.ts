@@ -49,6 +49,7 @@ export interface StationSettings {
   id?: string | number
   notification_emails?: string[]
   notification_phones?: string[]
+  sms_enabled?: boolean
   daily_report_time?: string
   daily_report_enabled?: boolean
   daily_report_timezone?: string
@@ -64,6 +65,18 @@ export interface StationSettings {
     alerts?: boolean
   }
   abnormal_alerts_enabled?: boolean
+  alarm_thresholds?: {
+    windMph?: number
+    tempPercent?: number
+    humidityPercent?: number
+    changeWindowMinutes?: number
+    snowInches?: number
+    precipRateInches?: number
+    freezeTempF?: number
+  }
+  site_title?: string
+  station_label?: string
+  station_location?: string
   current_temp?: number
   current_humidity?: number
   current_pressure?: number

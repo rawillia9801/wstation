@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
-import type { ReactNode } from 'react'
+import type { MouseEvent, ReactNode } from 'react'
 import {
   AlarmClock,
   Bell,
@@ -55,6 +55,8 @@ const railItems = [
   { label: 'Cameras', href: '/cameras', icon: Camera },
   { label: 'Settings', href: '/settings', icon: Settings }
 ]
+
+const protectedPages = new Set(['history', 'alarms', 'reports', 'maps', 'cameras', 'settings'])
 
 function unavailable() {
   return <span className="unavailable">Live Data Unavailable</span>
@@ -115,6 +117,10 @@ export default function Dashboard() {
   const router = useRouter()
   const activePage = pageMap[pathname] ?? 'dashboard'
   const [time, setTime] = useState('')
+  const [unlocked, setUnlocked] = useState(false)
+  const [pendingHref, setPendingHref] = useState<string | null>(null)
+  const [password, setPassword] = useState('')
+  const [authError, setAuthError] = useState('')
   const { data, error } = useLiveData()
 
   useEffect(() => {
@@ -126,6 +132,28 @@ export default function Dashboard() {
 
   const live = data?.stationOnline === true
   const stationId = data?.current.stationId || 'KVAMARIO42'
+  const locked = protectedPages.has(activePage) && !unlocked
+
+  function guardNavigation(event: MouseEvent<HTMLAnchorElement>, itemPage: string, href: string) {
+    if (!protectedPages.has(itemPage) || unlocked) return
+    event.preventDefault()
+    setPendingHref(href)
+    setPassword('')
+    setAuthError('')
+  }
+
+  function unlock() {
+    if (password === 'Today2020') {
+      setUnlocked(true)
+      setAuthError('')
+      const href = pendingHref
+      setPendingHref(null)
+      if (href) router.push(href)
+      return
+    }
+
+    setAuthError('Incorrect password.')
+  }
 
   return (
     <main className="dashboard-shell">
@@ -138,7 +166,7 @@ export default function Dashboard() {
             const Icon = item.icon
             const active = activePage === item.label.toLowerCase()
             return (
-              <Link key={item.label} className={`rail-button ${active ? 'active' : ''}`} href={item.href}>
+              <Link key={item.label} onClick={(event) => guardNavigation(event, item.label.toLowerCase(), item.href)} className={`rail-button ${active ? 'active' : ''}`} href={item.href}>
                 <Icon size={24} strokeWidth={1.7} />
                 <span>{item.label}</span>
               </Link>
@@ -175,7 +203,7 @@ export default function Dashboard() {
                 const Icon = item.icon
                 const active = activePage === item.label.toLowerCase()
                 return (
-                  <Link key={item.label} href={item.href} className={active ? 'active' : ''}>
+                  <Link key={item.label} onClick={(event) => guardNavigation(event, item.label.toLowerCase(), item.href)} href={item.href} className={active ? 'active' : ''}>
                     {item.badge && <i>{item.badge}</i>}
                     <Icon size={26} strokeWidth={1.5} />
                     <span>{item.label}</span>
@@ -192,6 +220,20 @@ export default function Dashboard() {
 
         {activePage === 'dashboard' ? <DashboardGrid data={data} /> : <ModulePage page={activePage} data={data} />}
       </section>
+      {(pendingHref || locked) && (
+        <div className="lock-overlay">
+          <div className={`${panel} lock-panel`}>
+            <div className="panel-title">PASSWORD REQUIRED</div>
+            <p>This section is protected.</p>
+            <input value={password} onChange={(event) => setPassword(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && unlock()} type="password" autoFocus placeholder="Password" />
+            {authError && <span>{authError}</span>}
+            <div className="settings-actions">
+              {pendingHref && <button type="button" onClick={() => setPendingHref(null)}>Cancel</button>}
+              <button type="button" onClick={unlock}>Unlock</button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
@@ -240,9 +282,20 @@ function ModulePage({ page, data }: { page: string; data: LiveDashboardPayload |
 
 function AlertSettings({ title }: { title: string }) {
   const [email, setEmail] = useState('')
+  const [phones, setPhones] = useState('')
+  const [smsEnabled, setSmsEnabled] = useState(false)
   const [daily, setDaily] = useState(true)
   const [severe, setSevere] = useState(true)
   const [reportTime, setReportTime] = useState('07:00')
+  const [thresholds, setThresholds] = useState({
+    windMph: 30,
+    tempPercent: 10,
+    humidityPercent: 15,
+    changeWindowMinutes: 60,
+    snowInches: 1,
+    precipRateInches: 1,
+    freezeTempF: 32
+  })
   const [sections, setSections] = useState({
     current: true,
     forecast: true,
@@ -262,9 +315,12 @@ function AlertSettings({ title }: { title: string }) {
         const saved = await response.json()
         if (cancelled || saved?.error) return
         setEmail((saved.notification_emails || []).join('\n'))
+        setPhones((saved.notification_phones || []).join('\n'))
+        setSmsEnabled(saved.sms_enabled === true)
         setDaily(saved.daily_report_enabled !== false)
         setSevere(saved.abnormal_alerts_enabled !== false)
         setReportTime(saved.daily_report_time || '07:00')
+        setThresholds((current) => ({ ...current, ...(saved.alarm_thresholds || {}) }))
         setSections((current) => ({ ...current, ...(saved.daily_report_sections || {}) }))
         setStatus(saved.notification_emails?.length ? 'Saved recipients loaded.' : 'No saved recipients yet.')
       } catch {
@@ -289,10 +345,13 @@ function AlertSettings({ title }: { title: string }) {
         signal: controller.signal,
         body: JSON.stringify({
           notification_emails: email.split(/[,\n]/).map((item) => item.trim()).filter(Boolean),
+          notification_phones: phones.split(/[,\n]/).map((item) => item.trim()).filter(Boolean),
+          sms_enabled: smsEnabled,
           daily_report_enabled: daily,
           daily_report_time: reportTime,
           daily_report_sections: sections,
-          abnormal_alerts_enabled: severe
+          abnormal_alerts_enabled: severe,
+          alarm_thresholds: thresholds
         })
       })
       const result = await response.json().catch(() => ({ ok: false, error: 'Settings service returned an invalid response' }))
@@ -309,7 +368,7 @@ function AlertSettings({ title }: { title: string }) {
     const response = await fetch('/api/alerts/test', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, daily, severe })
+      body: JSON.stringify({ email, phones, daily, severe, sms_enabled: smsEnabled })
     })
     const result = await response.json()
     setStatus(result.ok ? 'Test alert dispatched.' : result.error || 'Alert service not configured.')
@@ -319,9 +378,22 @@ function AlertSettings({ title }: { title: string }) {
     <ModuleShell title={title} subtitle="Recipients and threshold alerts">
       <div className="settings-grid">
         <label>Email recipients<textarea value={email} onChange={(event) => setEmail(event.target.value)} rows={5} /></label>
+        <label>SMS phone numbers<textarea value={phones} onChange={(event) => setPhones(event.target.value)} rows={4} placeholder="+18555555555" /></label>
         <label>Daily report time<input type="time" value={reportTime} onChange={(event) => setReportTime(event.target.value)} /></label>
         <label><input type="checkbox" checked={daily} onChange={(event) => setDaily(event.target.checked)} /> Daily weather summary</label>
         <label><input type="checkbox" checked={severe} onChange={(event) => setSevere(event.target.checked)} /> Severe threshold alerts</label>
+        <label><input type="checkbox" checked={smsEnabled} onChange={(event) => setSmsEnabled(event.target.checked)} /> SMS alarm alerts</label>
+        {title.toLowerCase().includes('alarm') && (
+          <div className="alarm-threshold-grid">
+            <label>Wind threshold<input type="number" value={thresholds.windMph} onChange={(event) => setThresholds((current) => ({ ...current, windMph: Number(event.target.value) }))} /><span>mph</span></label>
+            <label>Temp spike/drop<input type="number" value={thresholds.tempPercent} onChange={(event) => setThresholds((current) => ({ ...current, tempPercent: Number(event.target.value) }))} /><span>%</span></label>
+            <label>Humidity spike/drop<input type="number" value={thresholds.humidityPercent} onChange={(event) => setThresholds((current) => ({ ...current, humidityPercent: Number(event.target.value) }))} /><span>%</span></label>
+            <label>Change window<input type="number" value={thresholds.changeWindowMinutes} onChange={(event) => setThresholds((current) => ({ ...current, changeWindowMinutes: Number(event.target.value) }))} /><span>min</span></label>
+            <label>Heavy rain<input type="number" value={thresholds.precipRateInches} onChange={(event) => setThresholds((current) => ({ ...current, precipRateInches: Number(event.target.value) }))} /><span>in/hr</span></label>
+            <label>Snow accumulation<input type="number" value={thresholds.snowInches} onChange={(event) => setThresholds((current) => ({ ...current, snowInches: Number(event.target.value) }))} /><span>in</span></label>
+            <label>Freeze risk<input type="number" value={thresholds.freezeTempF} onChange={(event) => setThresholds((current) => ({ ...current, freezeTempF: Number(event.target.value) }))} /><span>F</span></label>
+          </div>
+        )}
         <div className="report-section-grid">
           {[
             ['stationStatus', 'Station status'],

@@ -1233,6 +1233,7 @@ h1 {
 
 .settings-grid input[type="text"],
 .settings-grid input[type="time"],
+.settings-grid input[type="number"],
 .settings-grid textarea,
 .settings-grid input:not([type]) {
   height: 40px;
@@ -1275,6 +1276,62 @@ h1 {
 .settings-actions {
   display: flex;
   gap: 10px;
+}
+
+.alarm-threshold-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  border: 1px solid rgba(32, 245, 255, .24);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.alarm-threshold-grid label {
+  grid-template-columns: minmax(150px, 1fr) 120px 52px;
+  align-items: center;
+}
+
+.alarm-threshold-grid span {
+  color: var(--cyan);
+}
+
+.lock-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 5, 10, .72);
+  backdrop-filter: blur(8px);
+}
+
+.lock-panel {
+  width: min(420px, calc(100vw - 32px));
+  border-radius: 10px;
+  padding: 22px;
+  display: grid;
+  gap: 14px;
+  color: #f8fbff;
+}
+
+.lock-panel p {
+  margin: 0;
+  color: #a9b8c6;
+}
+
+.lock-panel input {
+  height: 40px;
+  border: 1px solid rgba(32, 245, 255, .28);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, .38);
+  color: white;
+  padding: 0 12px;
+}
+
+.lock-panel > span {
+  color: #ff9b9b;
+  font-size: 13px;
 }
 
 .settings-status,

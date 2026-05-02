@@ -11,7 +11,7 @@ export async function GET() {
   if ('error' in settings) return NextResponse.json({ ok:false, error: settings.error, triggers: [] })
 
   const live = await getLiveDashboardPayload()
-  const triggers = severeThresholds(live)
+  const triggers = severeThresholds(live, settings)
 
   for (const trigger of triggers) {
     await sendWeatherAlert(settings, trigger, `${trigger} exceeded configured abnormal weather threshold at Marion station.`)

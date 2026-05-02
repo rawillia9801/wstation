@@ -1,22 +1,28 @@
 const baseUrl = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://staleyclimate.info'
 const secret = process.env.CRON_SECRET
-const url = new URL('/api/send-daily-report', baseUrl)
 
-if (secret) {
-  url.searchParams.set('secret', secret)
-}
+async function call(path) {
+  const url = new URL(path, baseUrl)
 
-const response = await fetch(url, {
-  method: 'GET',
-  headers: {
-    'User-Agent': 'Hostinger-Cron/StaleyClimate'
+  if (secret) {
+    url.searchParams.set('secret', secret)
   }
-})
 
-const body = await response.text()
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'User-Agent': 'Hostinger-Cron/StaleyClimate'
+    }
+  })
 
-console.log(body)
+  const body = await response.text()
 
-if (!response.ok) {
-  process.exitCode = 1
+  console.log(`${path}: ${body}`)
+
+  if (!response.ok) {
+    process.exitCode = 1
+  }
 }
+
+await call('/api/send-daily-report')
+await call('/api/evaluate-alarms')
