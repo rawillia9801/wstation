@@ -242,6 +242,16 @@ function AlertSettings({ title }: { title: string }) {
   const [email, setEmail] = useState('')
   const [daily, setDaily] = useState(true)
   const [severe, setSevere] = useState(true)
+  const [reportTime, setReportTime] = useState('07:00')
+  const [sections, setSections] = useState({
+    current: true,
+    forecast: true,
+    airQuality: true,
+    astronomy: true,
+    precipitation: true,
+    stationStatus: true,
+    alerts: true
+  })
   const [status, setStatus] = useState('Loading saved alert preferences...')
 
   useEffect(() => {
@@ -251,9 +261,11 @@ function AlertSettings({ title }: { title: string }) {
         const response = await fetch('/api/save-settings', { cache: 'no-store' })
         const saved = await response.json()
         if (cancelled || saved?.error) return
-        setEmail((saved.notification_emails || []).join(', '))
+        setEmail((saved.notification_emails || []).join('\n'))
         setDaily(saved.daily_report_enabled !== false)
         setSevere(saved.abnormal_alerts_enabled !== false)
+        setReportTime(saved.daily_report_time || '07:00')
+        setSections((current) => ({ ...current, ...(saved.daily_report_sections || {}) }))
         setStatus(saved.notification_emails?.length ? 'Saved recipients loaded.' : 'No saved recipients yet.')
       } catch {
         if (!cancelled) setStatus('Saved preferences could not be loaded.')
@@ -273,6 +285,8 @@ function AlertSettings({ title }: { title: string }) {
       body: JSON.stringify({
         notification_emails: email.split(/[,\n]/).map((item) => item.trim()).filter(Boolean),
         daily_report_enabled: daily,
+        daily_report_time: reportTime,
+        daily_report_sections: sections,
         abnormal_alerts_enabled: severe
       })
     })
@@ -294,9 +308,30 @@ function AlertSettings({ title }: { title: string }) {
   return (
     <ModuleShell title={title} subtitle="Recipients and threshold alerts">
       <div className="settings-grid">
-        <label>Email recipients<input value={email} onChange={(event) => setEmail(event.target.value)} /></label>
+        <label>Email recipients<textarea value={email} onChange={(event) => setEmail(event.target.value)} rows={5} /></label>
+        <label>Daily report time<input type="time" value={reportTime} onChange={(event) => setReportTime(event.target.value)} /></label>
         <label><input type="checkbox" checked={daily} onChange={(event) => setDaily(event.target.checked)} /> Daily weather summary</label>
         <label><input type="checkbox" checked={severe} onChange={(event) => setSevere(event.target.checked)} /> Severe threshold alerts</label>
+        <div className="report-section-grid">
+          {[
+            ['stationStatus', 'Station status'],
+            ['current', 'Current conditions'],
+            ['forecast', '5-day forecast'],
+            ['precipitation', 'Precipitation'],
+            ['airQuality', 'Air quality'],
+            ['astronomy', 'Sun & moon'],
+            ['alerts', 'Alerts']
+          ].map(([key, label]) => (
+            <label key={key}>
+              <input
+                type="checkbox"
+                checked={sections[key as keyof typeof sections]}
+                onChange={(event) => setSections((current) => ({ ...current, [key]: event.target.checked }))}
+              />
+              {label}
+            </label>
+          ))}
+        </div>
         <div className="settings-actions">
           <button type="button" onClick={savePreferences}>Save Preferences</button>
           <button type="button" onClick={sendTest}>Send Test Alert</button>

@@ -43,25 +43,47 @@ function value(value: number | null, suffix = '') {
   return value === null ? 'Live Data Unavailable' : `${value}${suffix}`
 }
 
-export function buildDailyReportEmail(data: LiveDashboardPayload) {
+type ReportSettings = {
+  daily_report_sections?: {
+    current?: boolean
+    forecast?: boolean
+    airQuality?: boolean
+    astronomy?: boolean
+    precipitation?: boolean
+    stationStatus?: boolean
+    alerts?: boolean
+  }
+}
+
+function row(label: string, content: string) {
+  return `<tr><td style="padding:7px 10px;border-bottom:1px solid rgba(103,232,249,.18);color:#9eeaf5;">${label}</td><td style="padding:7px 10px;border-bottom:1px solid rgba(103,232,249,.18);">${content}</td></tr>`
+}
+
+export function buildDailyReportEmail(data: LiveDashboardPayload, settings: ReportSettings = {}) {
+  const sections = settings.daily_report_sections || {}
+  const enabled = (key: keyof NonNullable<ReportSettings['daily_report_sections']>) => sections[key] !== false
   const subject = `Staley Street Weather Daily Report - ${new Date().toLocaleDateString()}`
+  const currentRows = [
+    row('Temperature', value(data.current.temperature, 'F')),
+    row('Feels Like', value(data.current.feelsLike, 'F')),
+    row('Humidity', value(data.current.humidity, '%')),
+    row('Pressure', value(data.current.pressure, ' inHg')),
+    row('Wind', `${value(data.current.windSpeed, ' mph')} gust ${value(data.current.windGust, ' mph')}`),
+    row('Dewpoint', value(data.current.dewpoint, 'F')),
+    row('UV', value(data.current.uv)),
+    row('Today High / Low', `${value(data.current.high, 'F')} / ${value(data.current.low, 'F')}`)
+  ].join('')
   const html = `
     <div style="font-family:Arial,sans-serif;background:#06111d;color:#ffffff;padding:28px;">
       <h1 style="color:#67e8f9;margin:0 0 12px;">Staley Street Weather</h1>
       <p style="color:#a7f3d0;margin:0 0 18px;">Source: ${data.source} | Updated: ${data.updatedAt || 'Live Data Unavailable'}</p>
-      <table style="width:100%;border-collapse:collapse;color:#fff;">
-        <tr><td>Temperature</td><td>${value(data.current.temperature, 'F')}</td></tr>
-        <tr><td>Feels Like</td><td>${value(data.current.feelsLike, 'F')}</td></tr>
-        <tr><td>Humidity</td><td>${value(data.current.humidity, '%')}</td></tr>
-        <tr><td>Pressure</td><td>${value(data.current.pressure, ' inHg')}</td></tr>
-        <tr><td>Wind</td><td>${value(data.current.windSpeed, ' mph')} gust ${value(data.current.windGust, ' mph')}</td></tr>
-        <tr><td>Dewpoint</td><td>${value(data.current.dewpoint, 'F')}</td></tr>
-        <tr><td>UV</td><td>${value(data.current.uv)}</td></tr>
-        <tr><td>Today High / Low</td><td>${value(data.current.high, 'F')} / ${value(data.current.low, 'F')}</td></tr>
-        <tr><td>Precip Today</td><td>${value(data.current.precipToday, ' in')}</td></tr>
-      </table>
-      <h2 style="color:#67e8f9;">Forecast</h2>
-      ${data.forecast.length ? data.forecast.map((day) => `<p><strong>${day.day}</strong>: ${day.condition || 'Live Data Unavailable'} | High ${value(day.high, 'F')} | Low ${value(day.low, 'F')} | Precip ${value(day.precip, '%')}</p>`).join('') : '<p>Live Data Unavailable</p>'}
+      ${enabled('stationStatus') ? `<h2 style="color:#67e8f9;">Station Status</h2><p>${data.stationOnline ? 'Online' : 'Live Data Unavailable'} | ${data.current.stationId}</p>` : ''}
+      ${enabled('current') ? `<h2 style="color:#67e8f9;">Current Conditions</h2><table style="width:100%;border-collapse:collapse;color:#fff;">${currentRows}</table>` : ''}
+      ${enabled('precipitation') ? `<h2 style="color:#67e8f9;">Precipitation</h2><p>Today: ${value(data.current.precipToday, ' in')}</p>` : ''}
+      ${enabled('forecast') ? `<h2 style="color:#67e8f9;">Forecast</h2>${data.forecast.length ? data.forecast.map((day) => `<p><strong>${day.day}</strong>: ${day.condition || 'Live Data Unavailable'} | High ${value(day.high, 'F')} | Low ${value(day.low, 'F')} | Precip ${value(day.precip, '%')}</p>`).join('') : '<p>Live Data Unavailable</p>'}` : ''}
+      ${enabled('airQuality') ? `<h2 style="color:#67e8f9;">Air Quality</h2><p>AQI: ${value(data.aqi.value)} ${data.aqi.label || ''}</p>` : ''}
+      ${enabled('astronomy') ? `<h2 style="color:#67e8f9;">Sun & Moon</h2><p>Sunrise ${data.astronomy.sunrise || 'Live Data Unavailable'} | Sunset ${data.astronomy.sunset || 'Live Data Unavailable'} | Moon ${data.astronomy.moon.phaseName} ${data.astronomy.moon.illumination}%</p>` : ''}
+      ${enabled('alerts') ? `<h2 style="color:#67e8f9;">Alerts</h2>${data.alerts.map((alert) => `<p>${alert.title}</p>`).join('')}` : ''}
     </div>
   `
   const text = `Staley Street Weather | Temp ${value(data.current.temperature, 'F')} | Humidity ${value(data.current.humidity, '%')} | Pressure ${value(data.current.pressure, ' inHg')}`
@@ -87,9 +109,9 @@ export async function sendEmail({ to, subject, html, text }: { to: string[]; sub
   return { ok: true, result }
 }
 
-export async function sendDailyReport(settings: { notification_emails?: string[] }, data: LiveDashboardPayload, explicitEmail?: string) {
+export async function sendDailyReport(settings: { notification_emails?: string[] } & ReportSettings, data: LiveDashboardPayload, explicitEmail?: string) {
   const recipients = resolveRecipients(settings, explicitEmail)
-  const email = buildDailyReportEmail(data)
+  const email = buildDailyReportEmail(data, settings)
   const send = await sendEmail({ to: recipients, ...email })
   return { ...send, recipients }
 }

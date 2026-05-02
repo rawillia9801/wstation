@@ -9,6 +9,16 @@ function cleanEmails(value: unknown) {
   return Array.from(new Set(value.map((item) => String(item).trim()).filter(Boolean)))
 }
 
+const defaultSections = {
+  current: true,
+  forecast: true,
+  airQuality: true,
+  astronomy: true,
+  precipitation: true,
+  stationStatus: true,
+  alerts: true
+}
+
 export function normalizeSettings(input: StationSettings = {}): StationSettings {
   return {
     ...input,
@@ -16,6 +26,10 @@ export function normalizeSettings(input: StationSettings = {}): StationSettings 
     notification_phones: Array.isArray(input.notification_phones) ? input.notification_phones : [],
     daily_report_time: String(input.daily_report_time || '07:00'),
     daily_report_enabled: input.daily_report_enabled !== false,
+    daily_report_sections: {
+      ...defaultSections,
+      ...(typeof input.daily_report_sections === 'object' && input.daily_report_sections ? input.daily_report_sections : {})
+    },
     abnormal_alerts_enabled: input.abnormal_alerts_enabled !== false
   }
 }

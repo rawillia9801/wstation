@@ -51,6 +51,15 @@ export interface StationSettings {
   notification_phones?: string[]
   daily_report_time?: string
   daily_report_enabled?: boolean
+  daily_report_sections?: {
+    current?: boolean
+    forecast?: boolean
+    airQuality?: boolean
+    astronomy?: boolean
+    precipitation?: boolean
+    stationStatus?: boolean
+    alerts?: boolean
+  }
   abnormal_alerts_enabled?: boolean
   current_temp?: number
   current_humidity?: number
