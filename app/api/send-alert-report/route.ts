@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sendSevereWeatherAlert } from '@/lib/resend-alerts'
+import { sendWeatherAlert } from '@/lib/mail-service'
 import { readSettings } from '@/lib/settings-store'
 
 export const dynamic = 'force-dynamic'
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   if ('error' in settings) return NextResponse.json({ ok:false, error: settings.error })
 
   const recipients = [...(settings.notification_emails || [])]
-  const result = await sendSevereWeatherAlert(settings, type, message)
+  const result = await sendWeatherAlert(settings, type, message)
 
-  return NextResponse.json({ ok:true, sent:type, recipients, result })
+  return NextResponse.json({ ok:result.ok, sent:type, recipients, result })
 }

@@ -1,4 +1,5 @@
-import { sendDailyForecastEmail } from './mailer'
+import { sendWeatherAlert } from './mail-service'
+import { readSettings } from './settings-store'
 
 export async function evaluateWeatherAlerts(observation: any) {
   if (!observation) return
@@ -7,6 +8,9 @@ export async function evaluateWeatherAlerts(observation: any) {
   const windGust = observation.imperial?.windGust || 0
 
   if (pressure < 29.4 || windGust > 35) {
-    await sendDailyForecastEmail()
+    const settings = await readSettings()
+    if (!('error' in settings)) {
+      await sendWeatherAlert(settings, 'Station Threshold Alert', 'A live station pressure or wind threshold was exceeded.')
+    }
   }
 }
