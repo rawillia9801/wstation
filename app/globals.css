@@ -1101,6 +1101,215 @@ h1 {
   font-size: 11px;
 }
 
+.control-page {
+  height: 100%;
+  min-height: 0;
+  padding: 18px;
+  overflow: auto;
+}
+
+.control-page.compact {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+}
+
+.control-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.control-header > div:first-child {
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(42, 255, 247, .38);
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: var(--cyan);
+  background: rgba(0, 217, 255, .08);
+}
+
+.control-header h2 {
+  margin: 0;
+  color: #f8fbff;
+  font-size: 24px;
+  letter-spacing: .02em;
+}
+
+.control-header span,
+.alarm-summary,
+.control-actions span {
+  color: #a9b8c6;
+  font-size: 13px;
+}
+
+.control-grid,
+.control-grid.two,
+.recipient-grid,
+.alarm-summary {
+  display: grid;
+}
+
+.control-grid {
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.control-grid.two,
+.recipient-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.recipient-grid {
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.control-field,
+.textarea-field,
+.toggle-field {
+  border: 1px solid rgba(42, 255, 247, .2);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, .28);
+}
+
+.control-field,
+.textarea-field {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.control-field span,
+.textarea-field span {
+  color: #d7faff;
+  font-size: 12px;
+}
+
+.textarea-field span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.control-field input,
+.textarea-field textarea,
+.lock-panel input {
+  width: 100%;
+  border: 1px solid rgba(42, 255, 247, .28);
+  border-radius: 7px;
+  background: rgba(1, 8, 14, .8);
+  color: #f8fbff;
+  padding: 10px;
+  outline: none;
+}
+
+.textarea-field textarea {
+  min-height: 132px;
+  resize: vertical;
+}
+
+.toggle-field {
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  color: #e7faff;
+}
+
+.toggle-field input {
+  width: 18px;
+  height: 18px;
+}
+
+.threshold-field > div {
+  display: grid;
+  grid-template-columns: 1fr 62px;
+  gap: 8px;
+  align-items: center;
+}
+
+.threshold-field b {
+  color: var(--cyan);
+  font-size: 13px;
+}
+
+.alarm-summary {
+  gap: 6px;
+  margin: 10px 0 16px;
+}
+
+.control-actions,
+.lock-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.control-actions button,
+.lock-actions button {
+  min-height: 38px;
+  border: 1px solid rgba(42, 255, 247, .38);
+  border-radius: 8px;
+  background: rgba(0, 217, 255, .12);
+  color: #dffcff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+.report-tile {
+  min-height: 88px;
+  border: 1px solid rgba(42, 255, 247, .22);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px;
+  color: #e8faff;
+  background: rgba(0, 0, 0, .25);
+}
+
+.lock-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 5, 10, .72);
+  backdrop-filter: blur(8px);
+}
+
+.lock-panel {
+  width: min(420px, calc(100vw - 32px));
+  border-radius: 10px;
+  padding: 22px;
+  display: grid;
+  gap: 14px;
+  color: #f8fbff;
+}
+
+.lock-panel > svg {
+  color: var(--cyan);
+}
+
+.lock-panel p {
+  margin: 4px 0 0;
+  color: #a9b8c6;
+}
+
+.lock-panel > span {
+  color: #ff9b9b;
+  font-size: 13px;
+}
+
 @media (max-height: 860px) {
   .dashboard-shell {
     padding-top: 8px;

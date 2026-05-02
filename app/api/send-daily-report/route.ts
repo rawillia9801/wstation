@@ -1,61 +1,19 @@
 import { NextResponse } from 'next/server'
-import { Resend } from 'resend'
-import { createClient } from '@supabase/supabase-js'
-import { buildDailyForecastEmail } from '@/lib/resendTemplates'
+import { loadStationSettings, sendDailyReport } from '@/lib/notificationCenter'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  if (!process.env.RESEND_API_KEY || !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return NextResponse.json({ ok: false, stage: 'env_missing', error: 'Notification service is not configured' })
-  }
-
-  const resend = new Resend(process.env.RESEND_API_KEY)
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
-  const { data: settings, error: settingsError } = await supabase.from('station_settings').select('*').limit(1).single()
-
-  if (settingsError) return NextResponse.json({ ok:false, stage:'supabase_read', error: settingsError.message })
-  if (!settings) return NextResponse.json({ ok:false, stage:'settings_missing', error:'No settings found' })
-
-  const recipients = [...(settings.notification_emails || [])]
-
-  if (!recipients.length) {
-    return NextResponse.json({ ok:false, stage:'recipient_check', error:'No email recipients saved', recipients })
-  }
-
-  const payload = buildDailyForecastEmail({
-    temp: settings.current_temp || 0,
-    humidity: settings.current_humidity || 0,
-    pressure: settings.current_pressure || 0,
-    wind: settings.current_wind || 0,
-    uv: settings.current_uv || 0,
-    high: settings.forecast_high || 0,
-    low: settings.forecast_low || 0,
-    summary: settings.forecast_summary || 'No summary',
-    waterTemp: settings.water_temp || 67,
-    waterQuality: settings.water_quality || 'GOOD',
-    uvRisk: settings.uv_risk || 'LOW'
-  })
+  const { settings, error } = await loadStationSettings()
+  if (error) return NextResponse.json({ ok: false, stage: 'settings_read', error })
 
   try {
-    const resendResult = await resend.emails.send({
-      from: 'Staley Climate <alerts@staleyclimate.info>',
-      to: recipients,
-      subject: payload.subject,
-      html: payload.html,
-      text: payload.text
-    })
-
+    return NextResponse.json(await sendDailyReport(settings))
+  } catch (err: any) {
     return NextResponse.json({
-      ok:true,
-      stage:'resend_send',
-      recipients,
-      resendResult
-    })
-  } catch (err:any) {
-    return NextResponse.json({
-      ok:false,
-      stage:'resend_exception',
-      recipients,
-      error: err?.message || 'Unknown resend failure'
+      ok: false,
+      stage: 'send_daily_report',
+      error: err?.message || 'Unknown report failure'
     })
   }
 }

@@ -1,33 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Resend } from 'resend'
-import { createClient } from '@supabase/supabase-js'
-import { buildAlertEmail } from '@/lib/resendTemplates'
+import { loadStationSettings, sendAlarmNotification } from '@/lib/notificationCenter'
+
+export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
-  if (!process.env.RESEND_API_KEY || !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return NextResponse.json({ ok: false, stage: 'env_missing', error: 'Notification service is not configured' })
-  }
+  const { settings, error } = await loadStationSettings()
+  if (error) return NextResponse.json({ ok: false, stage: 'settings_read', error })
 
-  const resend = new Resend(process.env.RESEND_API_KEY)
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
   const body = await req.json()
-  const { type, message } = body
+  const type = String(body.type || 'Weather Alarm')
+  const message = String(body.message || 'A configured weather alarm was triggered.')
 
-  const { data: settings } = await supabase.from('station_settings').select('*').limit(1).single()
-  if (!settings) return NextResponse.json({ ok:false, error:'No settings found' })
-
-  const recipients = [...(settings.notification_emails || [])]
-  const payload = buildAlertEmail(type, message)
-
-  if (recipients.length) {
-    await resend.emails.send({
-      from: 'Staley Climate <alerts@staleyclimate.info>',
-      to: recipients,
-      subject: payload.subject,
-      html: payload.html,
-      text: payload.text
+  try {
+    return NextResponse.json(await sendAlarmNotification(settings, type, message))
+  } catch (err: any) {
+    return NextResponse.json({
+      ok: false,
+      stage: 'send_alarm_notification',
+      error: err?.message || 'Unknown alarm notification failure'
     })
   }
-
-  return NextResponse.json({ ok:true, sent:type, recipients })
 }
