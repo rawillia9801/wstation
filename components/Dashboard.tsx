@@ -279,19 +279,29 @@ function AlertSettings({ title }: { title: string }) {
 
   async function savePreferences() {
     setStatus('Saving alert preferences...')
-    const response = await fetch('/api/save-settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        notification_emails: email.split(/[,\n]/).map((item) => item.trim()).filter(Boolean),
-        daily_report_enabled: daily,
-        daily_report_time: reportTime,
-        daily_report_sections: sections,
-        abnormal_alerts_enabled: severe
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), 12000)
+
+    try {
+      const response = await fetch('/api/save-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify({
+          notification_emails: email.split(/[,\n]/).map((item) => item.trim()).filter(Boolean),
+          daily_report_enabled: daily,
+          daily_report_time: reportTime,
+          daily_report_sections: sections,
+          abnormal_alerts_enabled: severe
+        })
       })
-    })
-    const result = await response.json()
-    setStatus(result.ok ? 'Alert preferences saved.' : result.error || 'Settings service not configured.')
+      const result = await response.json().catch(() => ({ ok: false, error: 'Settings service returned an invalid response' }))
+      setStatus(result.ok ? 'Alert preferences saved.' : result.error || `Settings service failed (${response.status}).`)
+    } catch (error: any) {
+      setStatus(error?.name === 'AbortError' ? 'Settings save timed out. Please try again.' : 'Settings save failed.')
+    } finally {
+      window.clearTimeout(timeout)
+    }
   }
 
   async function sendTest() {

@@ -1,8 +1,14 @@
 import { mkdir, readFile, writeFile } from 'fs/promises'
+import os from 'os'
 import path from 'path'
 import type { StationSettings } from '@/types/dashboard'
 
-const STORE_PATH = path.join(process.cwd(), '.data', 'station-settings.json')
+const STORE_PATHS = [
+  process.env.SETTINGS_STORE_PATH,
+  process.env.HOME ? path.join(process.env.HOME, '.wstation', 'station-settings.json') : undefined,
+  path.join(process.cwd(), '.data', 'station-settings.json'),
+  path.join(os.tmpdir(), 'wstation-settings.json')
+].filter(Boolean) as string[]
 
 function cleanEmails(value: unknown) {
   if (!Array.isArray(value)) return []
@@ -35,21 +41,40 @@ export function normalizeSettings(input: StationSettings = {}): StationSettings 
 }
 
 async function readFileSettings() {
-  try {
-    return normalizeSettings(JSON.parse(await readFile(STORE_PATH, 'utf8')))
-  } catch {
-    return {}
+  for (const storePath of STORE_PATHS) {
+    try {
+      return normalizeSettings(JSON.parse(await readFile(storePath, 'utf8')))
+    } catch {
+      // Try the next configured store location.
+    }
   }
+
+  return normalizeSettings({})
 }
 
 async function writeFileSettings(settings: StationSettings) {
-  await mkdir(path.dirname(STORE_PATH), { recursive: true })
-  await writeFile(STORE_PATH, JSON.stringify(settings, null, 2))
+  const errors: string[] = []
+
+  for (const storePath of STORE_PATHS) {
+    try {
+      await mkdir(path.dirname(storePath), { recursive: true })
+      await writeFile(storePath, JSON.stringify(settings, null, 2))
+      return storePath
+    } catch (error: any) {
+      errors.push(`${storePath}: ${error?.message || 'write failed'}`)
+    }
+  }
+
+  throw new Error(errors.join('; ') || 'No writable settings store found')
 }
 
 async function saveToFile(payload: StationSettings, source = 'file') {
-  await writeFileSettings(payload)
-  return { ok: true, saved: payload, source }
+  try {
+    const storePath = await writeFileSettings(payload)
+    return { ok: true, saved: payload, source, store: storePath }
+  } catch (error: any) {
+    return { ok: false, saved: payload, source, error: error?.message || 'Settings store is not writable' }
+  }
 }
 
 export async function readSettings() {
