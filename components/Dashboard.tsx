@@ -356,9 +356,9 @@ function ReportActions({ data }: { data: LiveDashboardPayload | null }) {
   const [status, setStatus] = useState('')
   async function triggerDaily() {
     setStatus('Triggering daily report...')
-    const response = await fetch('/api/send-daily-report')
+    const response = await fetch('/api/send-daily-report?force=1')
     const result = await response.json()
-    setStatus(result.ok ? 'Daily report endpoint completed.' : result.error || result.stage || 'Report service pending configuration.')
+    setStatus(result.ok ? `Daily report sent to ${(result.recipients || []).join(', ')}.` : result.reason || result.error || result.stage || 'Report service pending configuration.')
   }
   return (
     <div className="settings-grid">

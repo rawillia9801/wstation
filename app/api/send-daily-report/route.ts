@@ -1,37 +1,23 @@
-import { NextResponse } from 'next/server'
-import { sendDailyReport } from '@/lib/mail-service'
-import { getLiveDashboardPayload } from '@/lib/live-data'
-import { readSettings } from '@/lib/settings-store'
+import { NextRequest, NextResponse } from 'next/server'
+import { runDailyReport } from '@/lib/daily-report'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-export async function GET() {
-  const settings = await readSettings()
-  if ('error' in settings) return NextResponse.json({ ok:false, stage:'settings_read', error: settings.error })
-
-  const recipients = [...(settings.notification_emails || [])]
-
-  if (!recipients.length) {
-    return NextResponse.json({ ok:false, stage:'recipient_check', error:'No email recipients saved', recipients })
-  }
-
+export async function GET(req: NextRequest) {
   try {
-    const live = await getLiveDashboardPayload()
-    const resendResult = await sendDailyReport(settings, live)
-
-    return NextResponse.json({
-      ok:resendResult.ok,
-      stage:'resend_send',
-      recipients,
-      resendResult
-    })
+    const force = req.nextUrl.searchParams.get('force') === '1'
+    const result = await runDailyReport({ force, source: force ? 'manual_force' : 'http_cron' })
+    return NextResponse.json(result)
   } catch (err:any) {
     return NextResponse.json({
       ok:false,
-      stage:'resend_exception',
-      recipients,
+      stage:'daily_report_exception',
       error: err?.message || 'Unknown resend failure'
     })
   }
+}
+
+export async function POST(req: NextRequest) {
+  return GET(req)
 }

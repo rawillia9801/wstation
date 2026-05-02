@@ -56,13 +56,17 @@ type ReportSettings = {
 }
 
 function row(label: string, content: string) {
-  return `<tr><td style="padding:7px 10px;border-bottom:1px solid rgba(103,232,249,.18);color:#9eeaf5;">${label}</td><td style="padding:7px 10px;border-bottom:1px solid rgba(103,232,249,.18);">${content}</td></tr>`
+  return `<tr><td style="padding:8px 10px;border-bottom:1px solid rgba(103,232,249,.18);color:#9eeaf5;">${label}</td><td style="padding:8px 10px;border-bottom:1px solid rgba(103,232,249,.18);font-weight:700;">${content}</td></tr>`
+}
+
+function section(title: string, body: string) {
+  return `<section style="margin-top:18px;padding:16px;border:1px solid rgba(34,211,238,.28);border-radius:12px;background:rgba(2,16,29,.78);"><h2 style="color:#67e8f9;margin:0 0 12px;font-size:17px;letter-spacing:.08em;text-transform:uppercase;">${title}</h2>${body}</section>`
 }
 
 export function buildDailyReportEmail(data: LiveDashboardPayload, settings: ReportSettings = {}) {
   const sections = settings.daily_report_sections || {}
   const enabled = (key: keyof NonNullable<ReportSettings['daily_report_sections']>) => sections[key] !== false
-  const subject = `Staley Street Weather Daily Report - ${new Date().toLocaleDateString()}`
+  const subject = `Staley Street Weather Daily Weather Report - ${new Date().toLocaleDateString()}`
   const currentRows = [
     row('Temperature', value(data.current.temperature, 'F')),
     row('Feels Like', value(data.current.feelsLike, 'F')),
@@ -70,23 +74,31 @@ export function buildDailyReportEmail(data: LiveDashboardPayload, settings: Repo
     row('Pressure', value(data.current.pressure, ' inHg')),
     row('Wind', `${value(data.current.windSpeed, ' mph')} gust ${value(data.current.windGust, ' mph')}`),
     row('Dewpoint', value(data.current.dewpoint, 'F')),
-    row('UV', value(data.current.uv)),
+    row('UV Index', value(data.current.uv)),
     row('Today High / Low', `${value(data.current.high, 'F')} / ${value(data.current.low, 'F')}`)
   ].join('')
+  const uvBody = `<p style="font-size:28px;line-height:1;margin:0 0 6px;font-weight:800;">${value(data.current.uv)}</p><p style="margin:0;color:#cbd5e1;">${data.current.uv === null ? 'Live Data Unavailable' : data.current.uv >= 8 ? 'High UV exposure' : data.current.uv >= 5 ? 'Moderate UV exposure' : 'Low UV exposure'}</p>`
+  const forecastBody = data.forecast.length
+    ? data.forecast.slice(0, 5).map((day) => `<div style="padding:9px 0;border-bottom:1px solid rgba(103,232,249,.14);"><strong>${day.day}</strong><br/><span style="color:#dbeafe;">${day.condition || 'Live Data Unavailable'}</span><br/><span>High ${value(day.high, 'F')} | Low ${value(day.low, 'F')} | Precip ${value(day.precip, '%')}</span></div>`).join('')
+    : '<p>Live Data Unavailable</p>'
   const html = `
-    <div style="font-family:Arial,sans-serif;background:#06111d;color:#ffffff;padding:28px;">
-      <h1 style="color:#67e8f9;margin:0 0 12px;">Staley Street Weather</h1>
-      <p style="color:#a7f3d0;margin:0 0 18px;">Source: ${data.source} | Updated: ${data.updatedAt || 'Live Data Unavailable'}</p>
-      ${enabled('stationStatus') ? `<h2 style="color:#67e8f9;">Station Status</h2><p>${data.stationOnline ? 'Online' : 'Live Data Unavailable'} | ${data.current.stationId}</p>` : ''}
-      ${enabled('current') ? `<h2 style="color:#67e8f9;">Current Conditions</h2><table style="width:100%;border-collapse:collapse;color:#fff;">${currentRows}</table>` : ''}
-      ${enabled('precipitation') ? `<h2 style="color:#67e8f9;">Precipitation</h2><p>Today: ${value(data.current.precipToday, ' in')}</p>` : ''}
-      ${enabled('forecast') ? `<h2 style="color:#67e8f9;">Forecast</h2>${data.forecast.length ? data.forecast.map((day) => `<p><strong>${day.day}</strong>: ${day.condition || 'Live Data Unavailable'} | High ${value(day.high, 'F')} | Low ${value(day.low, 'F')} | Precip ${value(day.precip, '%')}</p>`).join('') : '<p>Live Data Unavailable</p>'}` : ''}
-      ${enabled('airQuality') ? `<h2 style="color:#67e8f9;">Air Quality</h2><p>AQI: ${value(data.aqi.value)} ${data.aqi.label || ''}</p>` : ''}
-      ${enabled('astronomy') ? `<h2 style="color:#67e8f9;">Sun & Moon</h2><p>Sunrise ${data.astronomy.sunrise || 'Live Data Unavailable'} | Sunset ${data.astronomy.sunset || 'Live Data Unavailable'} | Moon ${data.astronomy.moon.phaseName} ${data.astronomy.moon.illumination}%</p>` : ''}
-      ${enabled('alerts') ? `<h2 style="color:#67e8f9;">Alerts</h2>${data.alerts.map((alert) => `<p>${alert.title}</p>`).join('')}` : ''}
+    <div style="font-family:Arial,sans-serif;background:#020812;color:#ffffff;padding:28px;">
+      <div style="max-width:720px;margin:0 auto;">
+        <p style="color:#67e8f9;letter-spacing:.18em;text-transform:uppercase;margin:0 0 8px;">Live Personal Weather Station</p>
+        <h1 style="color:#ffffff;margin:0 0 12px;font-size:30px;">Staley Street Weather Daily Report</h1>
+        <p style="color:#a7f3d0;margin:0 0 18px;">Source: ${data.source} | Updated: ${data.updatedAt || 'Live Data Unavailable'} | Station ${data.current.stationId}</p>
+        ${enabled('stationStatus') ? section('Station Status', `<p>${data.stationOnline ? 'Online' : 'Live Data Unavailable'} | ${data.current.location || 'Marion, Virginia'}</p>`) : ''}
+        ${enabled('current') ? section('Daily Weather', `<table style="width:100%;border-collapse:collapse;color:#fff;">${currentRows}</table>`) : ''}
+        ${section('UV Index', uvBody)}
+        ${enabled('forecast') ? section('Forecast', forecastBody) : section('Forecast', forecastBody)}
+        ${enabled('precipitation') ? section('Precipitation', `<p>Today: ${value(data.current.precipToday, ' in')}</p>`) : ''}
+        ${enabled('airQuality') ? section('Air Quality', `<p>AQI: ${value(data.aqi.value)} ${data.aqi.label || ''}</p>`) : ''}
+        ${enabled('astronomy') ? section('Sun & Moon', `<p>Sunrise ${data.astronomy.sunrise || 'Live Data Unavailable'} | Sunset ${data.astronomy.sunset || 'Live Data Unavailable'} | Moon ${data.astronomy.moon.phaseName} ${data.astronomy.moon.illumination}%</p>`) : ''}
+        ${enabled('alerts') ? section('Alerts', data.alerts.length ? data.alerts.map((alert) => `<p>${alert.title}</p>`).join('') : '<p>No active alerts.</p>') : ''}
+      </div>
     </div>
   `
-  const text = `Staley Street Weather | Temp ${value(data.current.temperature, 'F')} | Humidity ${value(data.current.humidity, '%')} | Pressure ${value(data.current.pressure, ' inHg')}`
+  const text = `Staley Street Weather Daily Report | Weather: ${value(data.current.temperature, 'F')}, feels like ${value(data.current.feelsLike, 'F')} | UV: ${value(data.current.uv)} | Forecast: ${data.forecast.slice(0, 5).map((day) => `${day.day} ${day.condition || 'Unavailable'} high ${value(day.high, 'F')} low ${value(day.low, 'F')}`).join('; ')}`
   return { subject, html, text }
 }
 
