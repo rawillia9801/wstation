@@ -70,17 +70,13 @@ function temp(value: LiveNumber, digits = 0) {
   return formatted === null ? unavailable() : <>{formatted}°</>
 }
 
-function metricLine(value: LiveNumber, amplitude: number) {
-  if (value === null) return []
-  return Array.from({ length: 22 }, (_, index) => {
-    const primary = Math.sin(index * 0.8) * amplitude
-    const secondary = Math.sin(index * 1.9 + value) * amplitude * 0.35
-    return Number(Math.max(0, value + primary + secondary).toFixed(2))
-  })
-}
-
 function isSunOnly(condition: string | null | undefined) {
   return Boolean(condition && /\b(clear|sunny|mostly clear|mostly sunny)\b/i.test(condition))
+}
+
+function historySeries(data: LiveDashboardPayload | null, key: 'humidity' | 'pressure' | 'wind') {
+  const values = data?.history.map((row) => row[key]).filter((value): value is number => value !== null) ?? []
+  return values.length >= 3 ? values.slice(-22) : []
 }
 
 function useLiveData() {
@@ -211,9 +207,9 @@ function DashboardGrid({ data }: { data: LiveDashboardPayload | null }) {
     <div className="content-grid">
       <Hero data={data} />
       <div className="metrics-grid">
-        <Metric title="Humidity" icon={<Droplets />} value={humidity} unit="%" note={humidity === null ? null : humidity > 70 ? 'Moist air mass' : 'Comfortable'} series={metricLine(humidity, 0.8)} min="0" max="100" />
-        <Metric title="Pressure" icon={<Gauge />} value={pressure} unit="inHg" digits={2} note={pressure === null ? null : pressure < 29.7 ? 'Low pressure' : 'Steady'} series={metricLine(pressure, 0.01)} min="28.5" max="30.5" />
-        <Metric title="Wind" icon={<Wind />} value={windSpeed} unit="mph" note={windSpeed === null ? null : `${data?.current.windDirection || ''} gust ${num(windGust, 0) ?? 'unavailable'} mph`} series={metricLine(windSpeed, Math.max(0.4, (windGust ?? 0) / 12))} min="0" max="30" />
+        <Metric title="Humidity" icon={<Droplets />} value={humidity} unit="%" note={humidity === null ? null : humidity > 70 ? 'Moist air mass' : 'Comfortable'} series={historySeries(data, 'humidity')} min="0" max="100" />
+        <Metric title="Pressure" icon={<Gauge />} value={pressure} unit="inHg" digits={2} note={pressure === null ? null : pressure < 29.7 ? 'Low pressure' : 'Steady'} series={historySeries(data, 'pressure')} min="28.5" max="30.5" />
+        <Metric title="Wind" icon={<Wind />} value={windSpeed} unit="mph" note={windSpeed === null ? null : `${data?.current.windDirection || ''} gust ${num(windGust, 0) ?? 'unavailable'} mph`} series={historySeries(data, 'wind')} min="0" max="30" />
         <UVMetric value={uv} source={data?.current.uvSource ?? null} />
       </div>
 
