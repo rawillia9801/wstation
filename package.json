@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prestart": "next build",
     "build": "next build",
-    "start": "next start",
+    "start": "node server.js",
+    "cron:daily-report": "node scripts/hostinger-daily-report.mjs",
     "lint": "next lint"
   },
   "dependencies": {
