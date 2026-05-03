@@ -3,6 +3,7 @@ import type { LiveDashboardPayload } from './live-data'
 import type { StationSettings } from '@/types/dashboard'
 
 const FROM = 'Staley Climate <alerts@staleyclimate.info>'
+const SMS_TIMEOUT_MS = Number(process.env.SMS_SEND_TIMEOUT_MS || 12000)
 
 let resendClient: Resend | null = null
 
@@ -357,19 +358,28 @@ async function sendSms(to: string[], body: string) {
   const results = []
 
   for (const phone of to) {
-    const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Basic ${auth}`,
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: new URLSearchParams({
-        From: TWILIO_FROM_NUMBER,
-        To: phone,
-        Body: body.slice(0, 1500)
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), SMS_TIMEOUT_MS)
+    try {
+      const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          Authorization: `Basic ${auth}`,
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+          From: TWILIO_FROM_NUMBER,
+          To: phone,
+          Body: body.slice(0, 1500)
+        })
       })
-    })
-    results.push({ phone, ok: response.ok, status: response.status, body: await response.text().catch(() => '') })
+      results.push({ phone, ok: response.ok, status: response.status, body: await response.text().catch(() => '') })
+    } catch (error: any) {
+      results.push({ phone, ok: false, status: 0, body: error?.name === 'AbortError' ? 'Twilio SMS send timed out' : error?.message || 'Twilio SMS send failed' })
+    } finally {
+      clearTimeout(timeout)
+    }
   }
 
   return { skipped: false, results }
