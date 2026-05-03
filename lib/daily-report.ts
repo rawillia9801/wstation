@@ -38,21 +38,22 @@ export function dailyReportDue(settings: StationSettings, now = new Date()) {
   const timeZone = settings.daily_report_timezone || DEFAULT_ZONE
   const local = localParts(now, timeZone)
   const scheduled = scheduledMinutes(settings)
-  const scheduleWindow = Math.max(5, Number(process.env.REPORT_SEND_WINDOW_MINUTES || 7))
   const scheduledKey = `${local.dateKey}:${String(settings.daily_report_time || '07:00')}`
+  const alreadySent = settings.last_daily_report_sent_key === scheduledKey
+  const reachedSavedTime = local.minutes >= scheduled
 
   return {
     due:
       settings.daily_report_enabled !== false &&
-      local.minutes >= scheduled &&
-      local.minutes < scheduled + scheduleWindow &&
-      settings.last_daily_report_sent_key !== scheduledKey,
+      reachedSavedTime &&
+      !alreadySent,
     dateKey: local.dateKey,
     scheduledKey,
     timeZone,
     localMinutes: local.minutes,
     scheduledMinutes: scheduled,
-    scheduleWindow
+    reachedSavedTime,
+    alreadySent
   }
 }
 
@@ -70,7 +71,8 @@ export async function runDailyReport(options: RunDailyReportOptions = {}) {
   }
 
   if (!options.force && !due.due) {
-    return { ok: true, skipped: true, sentCount: 0, skippedCount: recipients.length, errors: [], reason: 'Daily report is not due yet', due, recipients, source: options.source || 'manual' }
+    const reason = due.alreadySent ? 'Daily report already sent for this saved time' : 'Daily report is not due yet'
+    return { ok: true, skipped: true, sentCount: 0, skippedCount: recipients.length, errors: [], reason, due, recipients, source: options.source || 'manual' }
   }
 
   const live = await getLiveDashboardPayload()
