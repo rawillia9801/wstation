@@ -37,16 +37,22 @@ function scheduledMinutes(settings: StationSettings) {
 export function dailyReportDue(settings: StationSettings, now = new Date()) {
   const timeZone = settings.daily_report_timezone || DEFAULT_ZONE
   const local = localParts(now, timeZone)
+  const scheduled = scheduledMinutes(settings)
+  const scheduleWindow = Math.max(5, Number(process.env.REPORT_SEND_WINDOW_MINUTES || 7))
+  const scheduledKey = `${local.dateKey}:${String(settings.daily_report_time || '07:00')}`
 
   return {
     due:
       settings.daily_report_enabled !== false &&
-      local.minutes >= scheduledMinutes(settings) &&
-      settings.last_daily_report_sent_date !== local.dateKey,
+      local.minutes >= scheduled &&
+      local.minutes < scheduled + scheduleWindow &&
+      settings.last_daily_report_sent_key !== scheduledKey,
     dateKey: local.dateKey,
+    scheduledKey,
     timeZone,
     localMinutes: local.minutes,
-    scheduledMinutes: scheduledMinutes(settings)
+    scheduledMinutes: scheduled,
+    scheduleWindow
   }
 }
 
@@ -73,6 +79,7 @@ export async function runDailyReport(options: RunDailyReportOptions = {}) {
   if (result.ok) {
     await patchSettings({
       last_daily_report_sent_date: due.dateKey,
+      last_daily_report_sent_key: due.scheduledKey,
       last_daily_report_sent_at: new Date().toISOString()
     })
   }

@@ -37,7 +37,14 @@ export type LiveDashboardPayload = {
     high: LiveNumber
     low: LiveNumber
     condition: string | null
+    detailed: string | null
+    wind: string | null
     precip: LiveNumber
+    nightName: string | null
+    nightCondition: string | null
+    nightDetailed: string | null
+    nightWind: string | null
+    nightPrecip: LiveNumber
   }>
   history: Array<{ time: string; timestamp: string | null; temp: LiveNumber; feels: LiveNumber; humidity: LiveNumber; pressure: LiveNumber; wind: LiveNumber }>
   astronomy: {
@@ -173,7 +180,14 @@ function pairForecast(periods: any[]) {
       high: number(day?.temperature),
       low: number(night?.temperature),
       condition: day?.shortForecast || null,
-      precip: number(day?.probabilityOfPrecipitation?.value)
+      detailed: day?.detailedForecast || null,
+      wind: [day?.windDirection, day?.windSpeed].filter(Boolean).join(' ') || null,
+      precip: number(day?.probabilityOfPrecipitation?.value),
+      nightName: night?.name || null,
+      nightCondition: night?.shortForecast || null,
+      nightDetailed: night?.detailedForecast || null,
+      nightWind: [night?.windDirection, night?.windSpeed].filter(Boolean).join(' ') || null,
+      nightPrecip: number(night?.probabilityOfPrecipitation?.value)
     })
   }
   return result

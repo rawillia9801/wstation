@@ -54,6 +54,7 @@ export interface StationSettings {
   daily_report_enabled?: boolean
   daily_report_timezone?: string
   last_daily_report_sent_date?: string
+  last_daily_report_sent_key?: string
   last_daily_report_sent_at?: string
   daily_report_sections?: {
     current?: boolean

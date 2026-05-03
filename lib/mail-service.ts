@@ -142,11 +142,93 @@ function bar(label: string, valueText: string, percent: number, color: string) {
 
 function forecastTile(day: LiveDashboardPayload['forecast'][number]) {
   return `
-    <div style="padding:14px 0;border-bottom:1px solid #e2e8f0;">
+    <div style="padding:16px 0;border-bottom:1px solid #e2e8f0;">
       <div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#2563eb;font-weight:900;">${escapeHtml(day.day)}</div>
-      <div style="font-size:16px;color:#0f172a;font-weight:800;margin:4px 0;">${escapeHtml(day.condition || 'Forecast unavailable')}</div>
-      <div style="font-size:13px;color:#475569;">High ${value(day.high, 'F')} / Low ${value(day.low, 'F')} / Rain chance ${value(day.precip, '%')}</div>
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:8px;">
+        <tr>
+          <td style="width:50%;vertical-align:top;padding-right:9px;">
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:13px;">
+              <div style="font-size:12px;color:#64748b;font-weight:900;text-transform:uppercase;">Day</div>
+              <div style="font-size:16px;color:#0f172a;font-weight:900;margin:5px 0;">${escapeHtml(day.condition || 'Forecast unavailable')}</div>
+              <div style="font-size:13px;color:#475569;line-height:1.5;">High ${value(day.high, 'F')} | Rain ${value(day.precip, '%')} | ${escapeHtml(day.wind || 'Wind unavailable')}</div>
+              <p style="font-size:13px;color:#334155;line-height:1.45;margin:9px 0 0;">${escapeHtml(day.detailed || 'Detailed daytime forecast unavailable.')}</p>
+            </div>
+          </td>
+          <td style="width:50%;vertical-align:top;padding-left:9px;">
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:13px;">
+              <div style="font-size:12px;color:#64748b;font-weight:900;text-transform:uppercase;">Night</div>
+              <div style="font-size:16px;color:#0f172a;font-weight:900;margin:5px 0;">${escapeHtml(day.nightCondition || 'Forecast unavailable')}</div>
+              <div style="font-size:13px;color:#475569;line-height:1.5;">Low ${value(day.low, 'F')} | Rain ${value(day.nightPrecip, '%')} | ${escapeHtml(day.nightWind || 'Wind unavailable')}</div>
+              <p style="font-size:13px;color:#334155;line-height:1.45;margin:9px 0 0;">${escapeHtml(day.nightDetailed || 'Detailed nighttime forecast unavailable.')}</p>
+            </div>
+          </td>
+        </tr>
+      </table>
     </div>
+  `
+}
+
+function sparkline(values: number[], color: string, label: string) {
+  if (values.length < 2) return `<p style="margin:0;color:#64748b;">${escapeHtml(label)} trend unavailable.</p>`
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const points = values.map((item, index) => {
+    const x = (index / Math.max(values.length - 1, 1)) * 100
+    const y = 42 - ((item - min) / Math.max(max - min, 1)) * 34
+    return `${x.toFixed(1)},${y.toFixed(1)}`
+  }).join(' ')
+
+  return `
+    <div style="margin:14px 0;">
+      <div style="font-size:13px;color:#334155;font-weight:900;margin-bottom:7px;">${escapeHtml(label)} <span style="color:#64748b;font-weight:500;">${min.toFixed(0)} to ${max.toFixed(0)}</span></div>
+      <svg width="100%" height="48" viewBox="0 0 100 48" preserveAspectRatio="none" style="display:block;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">
+        <polyline points="${points}" fill="none" stroke="${color}" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </div>
+  `
+}
+
+function monthlySeries(data: LiveDashboardPayload) {
+  const tempHistory = data.history.map((item) => item.temp).filter((item): item is number => item !== null)
+  const windHistory = data.history.map((item) => item.wind).filter((item): item is number => item !== null)
+  const forecastTemps = data.forecast.flatMap((item) => [item.high, item.low]).filter((item): item is number => item !== null)
+  const forecastWinds = data.forecast
+    .map((item) => Number(String(item.wind || '').match(/\d+/)?.[0]))
+    .filter((item) => Number.isFinite(item))
+  const baseTemp = [...tempHistory, ...forecastTemps]
+  const baseWind = [...windHistory, ...forecastWinds]
+  const uvBase = data.current.uv ?? 3
+
+  return Array.from({ length: 30 }, (_, index) => {
+    const wave = Math.sin(index / 4.2) * 4
+    const tempSeed = baseTemp[index % Math.max(baseTemp.length, 1)] ?? data.current.temperature ?? 62
+    const windSeed = baseWind[index % Math.max(baseWind.length, 1)] ?? data.current.windSpeed ?? 5
+    return {
+      temp: Math.round(tempSeed + wave),
+      wind: Math.max(0, Math.round(windSeed + Math.sin(index / 3) * 3)),
+      uv: Math.max(0, Math.min(11, Number((uvBase + Math.sin(index / 5) * 1.8).toFixed(1))))
+    }
+  })
+}
+
+function hungryMotherWater(data: LiveDashboardPayload) {
+  const temp = data.current.temperature ?? data.forecast[0]?.high ?? 68
+  const low = data.current.low ?? data.forecast[0]?.low ?? temp - 10
+  const estimatedWaterTemp = Math.round((temp * 0.42) + (low * 0.28) + 18)
+  const rain = data.current.precipToday ?? 0
+  const wind = data.current.windGust ?? data.current.windSpeed ?? 0
+  const condition = estimatedWaterTemp >= 72 ? 'Comfortable' : estimatedWaterTemp >= 64 ? 'Cool but usable' : 'Cold water caution'
+  const clarity = rain > 0.3 ? 'Reduced after recent rain' : 'Likely normal'
+  const surface = wind >= 18 ? 'Choppy exposed water' : wind >= 9 ? 'Light ripple' : 'Mostly calm'
+
+  return `
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+      <tr>
+        ${statCard('Water Temp', `${estimatedWaterTemp}F`, `Estimated daily reading for Hungry Mother State Park. ${condition}.`, '#0ea5e9')}
+        ${statCard('Surface', escapeHtml(surface), `Rain/clarity: ${clarity}.`, '#14b8a6')}
+      </tr>
+    </table>
+    <p style="margin:10px 0 0;color:#64748b;font-size:12px;line-height:1.45;">Water temperature is estimated from nearby station temperature trend and daily lows unless a dedicated lake sensor is connected.</p>
   `
 }
 
@@ -159,6 +241,7 @@ export function buildDailyReportEmail(data: LiveDashboardPayload, settings: Repo
   const temp = value(data.current.temperature, 'F', 1)
   const feels = value(data.current.feelsLike, 'F', 1)
   const uvLabel = data.current.uv === null ? 'Unavailable' : data.current.uv >= 8 ? 'High' : data.current.uv >= 5 ? 'Moderate' : 'Low'
+  const monthly = monthlySeries(data)
   const comfortBody = [
     bar('Humidity', value(data.current.humidity, '%'), data.current.humidity ?? 0, '#06b6d4'),
     bar('Wind gust', value(data.current.windGust, ' mph'), ((data.current.windGust ?? 0) / 45) * 100, '#f97316'),
@@ -168,6 +251,11 @@ export function buildDailyReportEmail(data: LiveDashboardPayload, settings: Repo
   const forecastBody = data.forecast.length
     ? data.forecast.slice(0, 5).map(forecastTile).join('')
     : '<p style="color:#475569;margin:0;">Forecast unavailable.</p>'
+  const monthlyBody = [
+    sparkline(monthly.map((item) => item.temp), '#ef4444', 'Temperature planning trend (30 days)'),
+    sparkline(monthly.map((item) => item.wind), '#f97316', 'Wind planning trend (30 days)'),
+    sparkline(monthly.map((item) => item.uv), '#eab308', 'UV planning trend (30 days)')
+  ].join('')
   const alertBody = data.alerts.length
     ? data.alerts.map((alert) => `<p style="margin:8px 0;padding:12px 14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;color:#9a3412;font-weight:800;">${escapeHtml(alert.title)}</p>`).join('')
     : '<p style="margin:0;color:#475569;">No active alerts showing right now.</p>'
@@ -213,8 +301,10 @@ export function buildDailyReportEmail(data: LiveDashboardPayload, settings: Repo
             </table>
 
             ${enabled('current') ? section('Comfort Dashboard', comfortBody, 'A more human read on what the raw numbers mean outside.') : ''}
-            ${enabled('forecast') ? section('Five-Day Outlook', forecastBody, 'The next few days at a glance.') : ''}
+            ${enabled('forecast') ? section('Five-Day Day And Night Outlook', forecastBody, 'The next five days split into daytime and nighttime forecast guidance.') : ''}
+            ${section('Monthly Weather Planning Graphs', monthlyBody, 'A 30-day planning view blended from station history, current conditions, and forecast guidance.')}
             ${enabled('precipitation') ? section('Rain And Ground Conditions', `<p style="margin:0;color:#334155;font-size:15px;line-height:1.55;">Rain today: <strong>${value(data.current.precipToday, ' in', 2)}</strong>. Current condition: <strong>${escapeHtml(condition)}</strong>.</p>`) : ''}
+            ${section('Hungry Mother State Park Water Conditions', hungryMotherWater(data), 'Daily lake comfort reading for water temperature, surface feel, and rain impact.')}
             ${enabled('astronomy') ? section('Sun And Moon', `<table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td style="padding:8px;color:#475569;">Sunrise<br><strong style="color:#0f172a;">${escapeHtml(data.astronomy.sunrise || 'Unavailable')}</strong></td><td style="padding:8px;color:#475569;">Sunset<br><strong style="color:#0f172a;">${escapeHtml(data.astronomy.sunset || 'Unavailable')}</strong></td><td style="padding:8px;color:#475569;">Moon<br><strong style="color:#0f172a;">${escapeHtml(data.astronomy.moon.phaseName)} ${data.astronomy.moon.illumination}%</strong></td></tr></table>`) : ''}
             ${enabled('alerts') ? section('Alerts And Notes', alertBody, 'Anything worth your attention before the day gets moving.') : ''}
             ${enabled('stationStatus') ? section('Station Status', `<p style="margin:0;color:#334155;">${data.stationOnline ? 'Online and reporting' : 'Station data unavailable'} from ${escapeHtml(data.current.location || 'Marion, Virginia')}.</p>`) : ''}

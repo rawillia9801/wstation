@@ -56,6 +56,7 @@ export function normalizeSettings(input: StationSettings = {}): StationSettings 
     daily_report_time: String(input.daily_report_time || '07:00'),
     daily_report_timezone: String(input.daily_report_timezone || process.env.REPORT_TIME_ZONE || 'America/New_York'),
     last_daily_report_sent_date: typeof input.last_daily_report_sent_date === 'string' ? input.last_daily_report_sent_date : undefined,
+    last_daily_report_sent_key: typeof input.last_daily_report_sent_key === 'string' ? input.last_daily_report_sent_key : undefined,
     last_daily_report_sent_at: typeof input.last_daily_report_sent_at === 'string' ? input.last_daily_report_sent_at : undefined,
     daily_report_enabled: input.daily_report_enabled !== false,
     daily_report_sections: {
