@@ -46,7 +46,7 @@ export default function PrivacyPage() {
       </nav>
       <PrivacyPolicy />
       <footer className="site-footer legal-footer">
-        <span>© 2026 SWVA Chihuahua LLC. All rights reserved. WeatherClimate.info is operated by SWVA Chihuahua LLC. For terms of use and privacy policy, please visit <Link href="/privacy">Privacy Policy</Link> and <Link href="/terms">Terms &amp; Conditions</Link>.</span>
+        <span>© 2026 SWVA Chihuahua LLC. All rights reserved. StaleyClimate.info is operated by SWVA Chihuahua LLC. For terms of use and privacy policy, please visit <Link href="/privacy">Privacy Policy</Link> and <Link href="/terms">Terms &amp; Conditions</Link>.</span>
       </footer>
     </main>
   )
