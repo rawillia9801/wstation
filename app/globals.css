@@ -1434,6 +1434,30 @@ h1 {
   font-size: 13px;
 }
 
+.site-footer {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 34px;
+  padding: 8px 16px 0;
+  color: #9fb2bf;
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.site-footer a {
+  color: var(--cyan);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.legal-footer {
+  width: min(980px, calc(100vw - 32px));
+  padding: 0 0 10px;
+}
+
 .settings-status,
 .module-map-copy {
   color: #9fb2bf;
