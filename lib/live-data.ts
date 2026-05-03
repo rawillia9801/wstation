@@ -4,6 +4,7 @@ import { fetchCurrentStationWeather, fetchStationHistory } from './weather'
 
 const LAT = 36.845
 const LON = -81.507
+const FETCH_TIMEOUT_MS = Number(process.env.WEATHER_REQUEST_TIMEOUT_MS || 8000)
 
 export type LiveNumber = number | null
 
@@ -81,6 +82,17 @@ export type LiveDashboardPayload = {
 
 function number(value: unknown): LiveNumber {
   return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+async function fetchJson(url: string) {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+  try {
+    const response = await fetch(url, { cache: 'no-store', signal: controller.signal })
+    return response.json()
+  } finally {
+    clearTimeout(timeout)
+  }
 }
 
 function windDirection(degrees: unknown) {
@@ -214,8 +226,7 @@ async function fetchAstronomy() {
       timezone: 'America/New_York',
       forecast_days: '1'
     })
-    const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`, { cache: 'no-store' })
-    const data = await response.json()
+    const data = await fetchJson(`https://api.open-meteo.com/v1/forecast?${params.toString()}`)
     const sunriseIso = data?.daily?.sunrise?.[0] || null
     const sunsetIso = data?.daily?.sunset?.[0] || null
     const sunrise = sunriseIso ? new Date(sunriseIso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : null
@@ -237,8 +248,7 @@ async function fetchOpenMeteoUv() {
       timezone: 'America/New_York',
       forecast_days: '1'
     })
-    const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`, { cache: 'no-store' })
-    const data = await response.json()
+    const data = await fetchJson(`https://api.open-meteo.com/v1/forecast?${params.toString()}`)
     const times: string[] = data?.hourly?.time || []
     const values: unknown[] = data?.hourly?.uv_index || []
     const now = Date.now()
@@ -268,8 +278,7 @@ async function fetchAqi() {
       timezone: 'America/New_York',
       forecast_days: '1'
     })
-    const response = await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?${params.toString()}`, { cache: 'no-store' })
-    const data = await response.json()
+    const data = await fetchJson(`https://air-quality-api.open-meteo.com/v1/air-quality?${params.toString()}`)
     const last = (values: unknown[]) => values.map(number).filter((item): item is number => item !== null).at(-1) ?? null
     const value = last(data?.hourly?.us_aqi || [])
     return {
@@ -288,8 +297,7 @@ async function fetchAqi() {
 
 async function fetchRadarTime() {
   try {
-    const response = await fetch('https://api.rainviewer.com/public/weather-maps.json', { cache: 'no-store' })
-    const data = await response.json()
+    const data = await fetchJson('https://api.rainviewer.com/public/weather-maps.json')
     return number(data?.radar?.past?.at(-1)?.time)
   } catch {
     return null

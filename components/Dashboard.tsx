@@ -429,16 +429,34 @@ function AlertSettings({ title }: { title: string }) {
 
 function ReportActions({ data }: { data: LiveDashboardPayload | null }) {
   const [status, setStatus] = useState('')
+  const [sending, setSending] = useState(false)
   async function triggerDaily() {
+    if (sending) return
     setStatus('Triggering daily report...')
-    const response = await fetch('/api/send-daily-report?force=1')
-    const result = await response.json()
-    setStatus(result.ok ? `Daily report sent to ${(result.recipients || []).join(', ')}.` : result.reason || result.error || result.stage || 'Report service pending configuration.')
+    setSending(true)
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), 35000)
+
+    try {
+      const response = await fetch('/api/send-daily-report?force=1', {
+        cache: 'no-store',
+        signal: controller.signal
+      })
+      const text = await response.text()
+      const result = text ? JSON.parse(text) : {}
+      const message = result.reason || result.error || result.stage || `Report service failed (${response.status}).`
+      setStatus(response.ok && result.ok ? `Daily report sent to ${(result.recipients || []).join(', ')}.` : message)
+    } catch (error: any) {
+      setStatus(error?.name === 'AbortError' ? 'Daily report timed out. Please try again.' : 'Daily report request failed.')
+    } finally {
+      window.clearTimeout(timeout)
+      setSending(false)
+    }
   }
   return (
     <div className="settings-grid">
       <div>Current report source: {data?.source || 'Live Data Unavailable'}</div>
-      <button className="module-action" type="button" onClick={triggerDaily}>Trigger Daily Report</button>
+      <button className="module-action" type="button" onClick={triggerDaily} disabled={sending}>{sending ? 'Sending...' : 'Trigger Daily Report'}</button>
       <div className="settings-status">{status}</div>
     </div>
   )

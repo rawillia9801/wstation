@@ -3,6 +3,7 @@ import axios from 'axios'
 const PUBLIC_WU_API_KEY = 'e1f10a1e78da46f5b10a1e78da96f525'
 const PRIMARY_STATION_ID = 'KVAMARIO42'
 const STATION_KEY = process.env.STATION_KEY
+const REQUEST_TIMEOUT_MS = Number(process.env.WEATHER_REQUEST_TIMEOUT_MS || 8000)
 
 function unique(values: Array<string | undefined>) {
   return Array.from(new Set(values.map((value) => value?.trim()).filter((value): value is string => Boolean(value))))
@@ -31,6 +32,7 @@ function parseDashboardObservation(html: string) {
 async function fetchFromDashboardPage() {
   const { data } = await axios.get(`https://www.wunderground.com/dashboard/pws/${PRIMARY_STATION_ID}`, {
     responseType: 'text',
+    timeout: REQUEST_TIMEOUT_MS,
     headers: { 'User-Agent': 'Mozilla/5.0 StaleyClimate/1.0' }
   })
 
@@ -40,6 +42,7 @@ async function fetchFromDashboardPage() {
 async function fetchDailySummary(stationId: string, apiKey: string) {
   const url = `https://api.weather.com/v2/pws/observations/all/1day?stationId=${stationId}&format=json&units=e&numericPrecision=decimal&apiKey=${apiKey}`
   const { data } = await axios.get(url, {
+    timeout: REQUEST_TIMEOUT_MS,
     headers: {
       'X-Station-Key': STATION_KEY || ''
     }
@@ -71,6 +74,7 @@ export async function fetchStationHistory() {
       try {
         const url = `https://api.weather.com/v2/pws/observations/all/1day?stationId=${stationId}&format=json&units=e&numericPrecision=decimal&apiKey=${apiKey}`
         const { data } = await axios.get(url, {
+          timeout: REQUEST_TIMEOUT_MS,
           headers: {
             'X-Station-Key': STATION_KEY || ''
           }
@@ -93,6 +97,7 @@ export async function fetchCurrentStationWeather() {
       try {
         const url = `https://api.weather.com/v2/pws/observations/current?stationId=${stationId}&format=json&units=e&numericPrecision=decimal&apiKey=${apiKey}`
         const { data } = await axios.get(url, {
+          timeout: REQUEST_TIMEOUT_MS,
           headers: {
             'X-Station-Key': STATION_KEY || ''
           }

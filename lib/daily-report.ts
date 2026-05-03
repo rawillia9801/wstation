@@ -10,6 +10,22 @@ type RunDailyReportOptions = {
 }
 
 const DEFAULT_ZONE = process.env.REPORT_TIME_ZONE || 'America/New_York'
+const WEATHER_TIMEOUT_MS = Number(process.env.REPORT_WEATHER_TIMEOUT_MS || 15000)
+const EMAIL_TIMEOUT_MS = Number(process.env.REPORT_EMAIL_TIMEOUT_MS || 20000)
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string) {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(message)), timeoutMs)
+      })
+    ])
+  } finally {
+    if (timer) clearTimeout(timer)
+  }
+}
 
 function localParts(date: Date, timeZone: string) {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -73,8 +89,8 @@ export async function runDailyReport(options: RunDailyReportOptions = {}) {
     return { ok: true, skipped: true, sentCount: 0, skippedCount: recipients.length, errors: [], reason: 'Daily report is not due yet', due, recipients, source: options.source || 'manual' }
   }
 
-  const live = await getLiveDashboardPayload()
-  const result = await sendDailyReport(settings, live)
+  const live = await withTimeout(getLiveDashboardPayload(), WEATHER_TIMEOUT_MS, 'Weather data timed out while preparing the daily report')
+  const result = await withTimeout(sendDailyReport(settings, live), EMAIL_TIMEOUT_MS, 'Resend timed out while sending the daily report')
 
   if (result.ok) {
     await patchSettings({
