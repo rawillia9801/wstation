@@ -29,7 +29,6 @@ cd /home/YOUR_ACCOUNT/domains/staleyclimate.info/public_html && npm run cron:dai
 ```
 
 The app itself decides whether the daily report is due based on the saved report time and `REPORT_TIME_ZONE`.
-Do not rely on an in-process `setInterval` scheduler on Hostinger. Hostinger can recycle Node apps that keep background work running, so the stable automatic path is the Hostinger cron job calling the API route.
 
 Required environment variables:
 
