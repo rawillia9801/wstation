@@ -48,6 +48,7 @@ export default function TermsPage() {
         <span />
         <Link href="/privacy">Privacy</Link>
         <Link href="/terms">Terms</Link>
+        <Link href="/consent">Consent</Link>
       </nav>
       <Terms />
       <footer className="site-footer legal-footer">

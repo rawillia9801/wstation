@@ -42,6 +42,7 @@ export default function PrivacyPage() {
         <span />
         <Link href="/privacy">Privacy</Link>
         <Link href="/terms">Terms</Link>
+        <Link href="/consent">Consent</Link>
       </nav>
       <PrivacyPolicy />
       <footer className="site-footer legal-footer">

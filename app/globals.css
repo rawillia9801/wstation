@@ -102,6 +102,14 @@ a {
   text-underline-offset: 3px;
 }
 
+.consent-disclosure {
+  border: 1px solid rgba(32, 245, 255, .22);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, .24);
+  padding: 14px 16px;
+  color: #f1fbff !important;
+}
+
 .legal-list {
   display: grid;
   gap: 10px;
