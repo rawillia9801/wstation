@@ -55,7 +55,7 @@ async function runScheduledRoutes() {
 }
 
 function startScheduler() {
-  if (dev || process.env.DISABLE_INTERNAL_SCHEDULER === '1') return
+  if (dev || process.env.ENABLE_INTERNAL_SCHEDULER !== '1') return
 
   const intervalMinutes = Number(process.env.INTERNAL_SCHEDULER_MINUTES || 5)
   const intervalMs = Math.max(1, intervalMinutes) * 60 * 1000
