@@ -24,5 +24,4 @@ async function call(path) {
   }
 }
 
-await call('/api/send-daily-report')
-await call('/api/evaluate-alarms')
+await call('/api/cron')

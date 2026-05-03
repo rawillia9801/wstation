@@ -1,8 +1,8 @@
 # Hostinger Deployment
 
-This app runs as a Hostinger Node.js app. Hostinger should start the website process, and Hostinger Cron should trigger the scheduled report/alarm checks automatically.
+This app runs as a Hostinger Node.js app. Scheduled reports and alarms should be triggered by a Hostinger Cron Job.
 
-## Website App
+## Website App Startup
 
 Use this startup command for the Node.js app:
 
@@ -16,49 +16,75 @@ npm start
 node server.js
 ```
 
-The app listens on the `PORT` value provided by Hostinger.
-
 ## Automatic Reports and Alarms
 
-Do not run this manually every few minutes. Create one Hostinger cron job and Hostinger will run it automatically.
+Do not run anything manually every few minutes.
 
-Recommended cron frequency: every 5 minutes.
+Create one Hostinger Cron Job. Hostinger will run it automatically.
 
-That does not mean the daily report sends every 5 minutes. The cron job only asks the app, "Is anything due right now?" The app checks the saved daily report time from the website settings and only sends when that time window is due.
+The cron job should call the public cron URL:
 
-The same cron job also checks weather alarms so alerts can be sent without someone pressing a button.
-
-## Cron Command
-
-In Hostinger, go to Advanced -> Cron Jobs and create a cron job with this command:
-
-```bash
-cd /home/YOUR_HOSTINGER_USER/domains/staleyclimate.info/public_html && npm run cron:daily-report
+```text
+https://staleyclimate.info/api/cron
 ```
 
-Replace `YOUR_HOSTINGER_USER` with the real Hostinger account folder name.
+That cron URL checks both:
 
-If your app files are not in `public_html`, use the folder where `package.json` is located.
+```text
+Daily report: /api/send-daily-report logic
+Alarms: /api/evaluate-alarms logic
+```
 
-## Cron Schedule
+The daily report only sends when the saved report time is due. Running the cron every 5 minutes does not send an email every 5 minutes.
 
-Use every 5 minutes if Hostinger gives you a simple interval selector.
+## Recommended Hostinger Cron Setup
 
-If Hostinger asks for cron syntax, use:
+Choose **Custom**, not PHP.
+
+Use this command:
+
+```bash
+curl -fsS https://staleyclimate.info/api/cron
+```
+
+Use this schedule:
 
 ```cron
 */5 * * * *
 ```
 
-Every 15 minutes also works:
+That means Hostinger calls the cron URL every 5 minutes automatically.
 
-```cron
-*/15 * * * *
+## If CRON_SECRET Is Set
+
+If the Hostinger environment has `CRON_SECRET` set, add it to the URL:
+
+```bash
+curl -fsS "https://staleyclimate.info/api/cron?secret=YOUR_SECRET"
 ```
 
-Every 5 minutes is better because the daily report send window is short and alarms are more time-sensitive.
+If `CRON_SECRET` is not set, use the plain URL command.
 
-## Required Environment Variables
+## Expected Cron Output
+
+The **View Output** button should show JSON like this:
+
+```json
+{
+  "ok": true,
+  "dailyReport": {
+    "skipped": true,
+    "reason": "Daily report is not due yet"
+  },
+  "alarms": {
+    "triggers": []
+  }
+}
+```
+
+When the saved report time is due, `dailyReport.sentCount` should be greater than `0`.
+
+## Environment Variables
 
 Set these in the Hostinger Node.js app environment:
 
@@ -66,10 +92,10 @@ Set these in the Hostinger Node.js app environment:
 SITE_URL=https://staleyclimate.info
 REPORT_TIME_ZONE=America/New_York
 RESEND_API_KEY=your_resend_key
-CRON_SECRET=your_secret_if_using_one
+CRON_SECRET=optional_secret
 ```
 
-For SMS alerts, also set:
+For SMS alerts:
 
 ```bash
 TWILIO_ACCOUNT_SID=your_twilio_account_sid
@@ -78,37 +104,16 @@ TWILIO_API_KEY_SECRET=your_twilio_api_key_secret
 TWILIO_FROM_NUMBER=+18555065425
 ```
 
-## What the Cron Script Does
+## Manual Test URLs
 
-The npm script is:
-
-```bash
-npm run cron:daily-report
-```
-
-That runs:
-
-```bash
-node scripts/hostinger-daily-report.mjs
-```
-
-The script calls these app routes:
+Cron check without forcing a send:
 
 ```text
-/api/send-daily-report
-/api/evaluate-alarms
+https://staleyclimate.info/api/cron
 ```
 
-`/api/send-daily-report` sends only if the saved report time is currently due.
-
-`/api/evaluate-alarms` checks thresholds and sends alarm emails/SMS if an alarm is triggered.
-
-## Manual Test
-
-The Reports page button still manually triggers:
+Manual forced daily report test:
 
 ```text
-/api/send-daily-report?force=1
+https://staleyclimate.info/api/send-daily-report?force=1
 ```
-
-That button is only for testing. The automatic path is the Hostinger cron job.
