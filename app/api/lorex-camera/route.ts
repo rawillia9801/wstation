@@ -25,13 +25,17 @@ function headersFromResponse(response: Response) {
   return headers
 }
 
-function upstreamHeaders() {
-  if (!lorexPass) return { 'user-agent': 'wstation-lorex-camera/1.2' }
-  const token = Buffer.from(`${lorexUser}:${lorexPass}`).toString('base64')
-  return {
-    'user-agent': 'wstation-lorex-camera/1.2',
-    Authorization: `Basic ${token}`
+function upstreamHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    'user-agent': 'wstation-lorex-camera/1.3'
   }
+
+  if (lorexPass) {
+    const token = Buffer.from(`${lorexUser}:${lorexPass}`).toString('base64')
+    headers.Authorization = `Basic ${token}`
+  }
+
+  return headers
 }
 
 function healthyStatus(message: string) {
