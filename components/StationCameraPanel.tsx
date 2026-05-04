@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { lorexCameraLabel, nextLorexCameraUrl } from '@/lib/lorexCamera'
 
-const panel = 'border border-cyan-300/30 bg-[#03101a]/82 shadow-[0_0_18px_rgba(0,221,255,0.18),inset_0_0_30px_rgba(0,190,255,0.045)] backdrop-blur-md'
+const panel = 'border border-cyan-300/30 bg-[radial-gradient(circle_at_top,rgba(0,180,255,0.14),rgba(2,9,18,0.92)_58%)] shadow-[0_0_22px_rgba(0,221,255,0.2),inset_0_0_34px_rgba(0,190,255,0.05)] backdrop-blur-md'
 
 export default function StationCameraPanel() {
   const [refreshKey, setRefreshKey] = useState(Date.now())
@@ -11,7 +11,7 @@ export default function StationCameraPanel() {
   const [offline, setOffline] = useState(false)
 
   useEffect(() => {
-    const timer = window.setInterval(() => setRefreshKey(Date.now()), 8000)
+    const timer = window.setInterval(() => setRefreshKey(Date.now()), 6000)
     return () => window.clearInterval(timer)
   }, [])
 
@@ -20,12 +20,12 @@ export default function StationCameraPanel() {
   return (
     <>
       <section className={`${panel} camera-panel`}>
-        <div className="panel-title">
-          STATION CAMERA
-          <span className="camera-live-badge">LIVE</span>
+        <div className="panel-title flex items-center justify-between">
+          <span>STATION CAMERA</span>
+          <span className="camera-live-badge">LIVE FEED</span>
         </div>
 
-        <div className="camera-feed-shell">
+        <div className="camera-feed-shell enhanced">
           {!offline ? (
             <img
               src={imageUrl}
@@ -35,15 +35,19 @@ export default function StationCameraPanel() {
               onLoad={() => setOffline(false)}
             />
           ) : (
-            <div className="camera-offline-state">CAMERA OFFLINE</div>
+            <div className="camera-offline-state">CAMERA LINK UNAVAILABLE</div>
           )}
 
+          <div className="camera-scanlines" />
           <div className="camera-feed-overlay" />
 
           <div className="camera-feed-footer">
-            <div className="camera-feed-label">{lorexCameraLabel}</div>
+            <div>
+              <div className="camera-feed-label">{lorexCameraLabel}</div>
+              <div className="camera-feed-subtext">Lorex secured perimeter channel</div>
+            </div>
             <button type="button" className="camera-view-button" onClick={() => setModalOpen(true)}>
-              VIEW CAMERA →
+              EXPAND ↗
             </button>
           </div>
         </div>
@@ -58,7 +62,7 @@ export default function StationCameraPanel() {
             {!offline ? (
               <img src={imageUrl} alt={lorexCameraLabel} className="camera-modal-image" onError={() => setOffline(true)} />
             ) : (
-              <div className="camera-offline-state large">CAMERA OFFLINE</div>
+              <div className="camera-offline-state large">CAMERA LINK UNAVAILABLE</div>
             )}
           </div>
         </div>
