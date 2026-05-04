@@ -10,6 +10,8 @@ const feedType = (process.env.LOREX_CAMERA_FEED_TYPE || 'snapshot').toLowerCase(
 const streamUrl = process.env.LOREX_CAMERA_FEED_URL || ''
 const snapshotUrl = process.env.LOREX_CAMERA_SNAPSHOT_URL || process.env.LOREX_CAMERA_FEED_URL || ''
 const rtspUrl = process.env.LOREX_RTSP_URL || ''
+const lorexUser = process.env.LOREX_USER || 'admin'
+const lorexPass = process.env.LOREX_PASS || ''
 
 function getSourceUrl(kind: FeedKind) {
   if (kind === 'snapshot') return snapshotUrl || streamUrl
@@ -18,10 +20,18 @@ function getSourceUrl(kind: FeedKind) {
 
 function headersFromResponse(response: Response) {
   const headers = new Headers()
-  const contentType = response.headers.get('content-type') || 'image/jpeg'
-  headers.set('content-type', contentType)
+  headers.set('content-type', response.headers.get('content-type') || 'image/jpeg')
   headers.set('cache-control', 'no-store, max-age=0')
   return headers
+}
+
+function upstreamHeaders() {
+  if (!lorexPass) return { 'user-agent': 'wstation-lorex-camera/1.2' }
+  const token = Buffer.from(`${lorexUser}:${lorexPass}`).toString('base64')
+  return {
+    'user-agent': 'wstation-lorex-camera/1.2',
+    Authorization: `Basic ${token}`
+  }
 }
 
 function healthyStatus(message: string) {
@@ -53,7 +63,7 @@ export async function GET(request: NextRequest) {
   try {
     const upstream = await fetch(sourceUrl, {
       cache: 'no-store',
-      headers: { 'user-agent': 'wstation-lorex-camera/1.1' }
+      headers: upstreamHeaders()
     })
 
     if (!upstream.ok || !upstream.body) {
