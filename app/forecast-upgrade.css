@@ -1,4 +1,4 @@
-/* Reference-quality dashboard polish. Front-end only; keeps live data pipeline untouched. */
+/* Reference dashboard proportions and card polish. Front-end only. */
 :root {
   --reference-cyan: #1ffff2;
   --reference-cyan-border: rgba(31, 255, 242, .44);
@@ -6,40 +6,48 @@
   --reference-amber: #ffb000;
 }
 
+html,
+body {
+  overflow: hidden;
+}
+
 .dashboard-shell {
-  min-width: 1360px;
-  min-height: 900px;
-  grid-template-columns: 112px 1fr;
-  gap: 12px;
-  padding: 10px;
+  width: 100vw;
+  height: 100vh;
+  min-width: 0;
+  min-height: 0;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: 10px;
+  padding: 8px 10px 8px 8px;
+  overflow: hidden;
 }
 
 .command-rail {
-  min-height: 880px;
-  height: calc(100vh - 20px);
-  padding: 24px 8px 10px;
+  height: calc(100vh - 16px);
+  min-height: 0;
+  padding: 22px 8px 8px;
   border-radius: 14px;
   border-color: rgba(31, 255, 242, .28);
   box-shadow: 0 0 34px rgba(0, 221, 255, .16), inset -1px 0 24px rgba(0, 229, 255, .08);
 }
 
 .rail-logo {
-  width: 64px;
-  height: 64px;
-  margin-bottom: 28px;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 22px;
   border-width: 2px;
   border-color: rgba(174, 255, 250, .86);
   box-shadow: 0 0 18px rgba(31, 255, 242, .50), inset 0 0 20px rgba(31, 255, 242, .14);
 }
 
 .rail-nav {
-  gap: 12px;
+  gap: 8px;
 }
 
 .rail-button {
-  height: 68px;
+  height: 58px;
   border-radius: 10px;
-  color: rgba(255, 255, 255, .82);
+  color: rgba(255, 255, 255, .84);
 }
 
 .rail-button span,
@@ -53,6 +61,11 @@
   color: var(--reference-cyan);
   border-color: rgba(31, 255, 242, .72);
   box-shadow: 0 0 24px rgba(31, 255, 242, .28), inset 0 0 22px rgba(31, 255, 242, .14);
+}
+
+.rail-block {
+  padding: 9px 8px;
+  font-size: 10px;
 }
 
 .rail-title,
@@ -79,46 +92,55 @@
 }
 
 .dashboard-main {
-  grid-template-rows: 126px auto;
+  min-width: 0;
+  height: calc(100vh - 16px);
+  grid-template-rows: 118px minmax(0, 1fr);
   gap: 8px;
+  overflow: hidden;
 }
 
 .top-band {
+  display: grid;
+  grid-template-columns: minmax(420px, 1fr) minmax(460px, 560px);
   align-items: start;
-  gap: 22px;
-  padding-top: 3px;
+  gap: 12px;
+  padding: 4px 0 0;
+  overflow: visible;
 }
 
 .title-cluster {
-  min-width: 650px;
+  min-width: 0;
   padding-left: 4px;
 }
 
 .eyebrow {
-  font-size: 14px;
-  letter-spacing: .12em;
+  font-size: clamp(11px, 1vw, 14px);
+  letter-spacing: .13em;
 }
 
 h1 {
-  margin: 8px 0 7px;
-  font-size: clamp(46px, 4.55vw, 76px);
-  line-height: .9;
+  margin: 6px 0 6px;
+  font-size: clamp(38px, 4.25vw, 66px);
+  line-height: .88;
   font-weight: 900;
   letter-spacing: -2px;
   color: #ffffff;
+  white-space: nowrap;
   text-shadow: 0 2px 0 rgba(0, 0, 0, .28), 0 0 18px rgba(255, 255, 255, .16);
 }
 
 .subhead {
-  font-size: 14px;
+  font-size: clamp(12px, 1.05vw, 14px);
   font-weight: 700;
   color: rgba(255, 255, 255, .94);
 }
 
 .header-actions {
-  width: min(590px, 44vw);
-  grid-template-rows: 36px 72px 38px;
-  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) 72px;
+  grid-template-rows: 34px 66px 34px;
+  gap: 8px;
 }
 
 .clock-pill,
@@ -130,31 +152,58 @@ h1 {
   font-weight: 800;
 }
 
+.clock-pill,
+.live-pill {
+  height: 34px;
+  font-size: 12px;
+}
+
 .top-nav {
-  gap: 12px;
+  grid-column: 1 / 3;
+  gap: 8px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .top-nav a {
-  min-height: 72px;
+  min-height: 66px;
+  padding: 5px 3px;
+}
+
+.top-nav a svg {
+  width: 24px;
+  height: 24px;
+}
+
+.top-nav i {
+  top: -8px;
+  right: 10px;
 }
 
 .alert-banner {
-  height: 40px;
+  grid-column: 1 / 3;
+  height: 34px;
+  min-width: 0;
   border-radius: 11px;
   border-color: rgba(255, 176, 0, .42);
   color: var(--reference-amber);
+  z-index: 6;
+  overflow: hidden;
 }
 
 .alert-banner button {
   color: var(--reference-amber);
   font-weight: 900;
+  white-space: nowrap;
 }
 
 .content-grid {
+  height: 100%;
+  min-height: 0;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  grid-template-rows: 258px 238px 228px 130px;
-  gap: 10px;
-  padding-bottom: 8px;
+  grid-template-rows: 1.16fr 1.05fr 1fr .58fr;
+  gap: 8px;
+  padding: 0 0 6px;
+  overflow: hidden;
 }
 
 .hero-panel,
@@ -168,57 +217,67 @@ h1 {
 .telemetry-panel,
 .station-details,
 .camera-panel {
+  min-width: 0;
+  min-height: 0;
   border-radius: 13px;
   border-color: var(--reference-cyan-border);
   box-shadow: 0 0 22px rgba(0, 225, 255, .11), inset 0 1px 0 rgba(255, 255, 255, .07), inset 0 -30px 42px rgba(0, 0, 0, .24);
 }
 
 .panel-title {
-  font-size: 14px;
+  font-size: clamp(11px, .95vw, 14px);
   letter-spacing: .11em;
 }
 
 .hero-panel {
   grid-column: 1 / 4;
-  padding: 20px 28px 20px 32px;
+  padding: clamp(14px, 1.25vw, 20px) clamp(18px, 1.85vw, 30px);
 }
 
 .hero-bg {
-  opacity: .96;
+  opacity: .98;
   filter: saturate(1.18) contrast(1.12) brightness(.86);
 }
 
+.hero-bg::before {
+  opacity: .44;
+}
+
 .hero-bg::after {
-  opacity: .78;
+  opacity: .68;
+}
+
+.hero-content {
+  height: calc(100% - 26px);
 }
 
 .temperature {
-  font-size: clamp(72px, 6.7vw, 106px);
+  font-size: clamp(54px, 6.05vw, 96px);
   line-height: .83;
   font-weight: 900;
   letter-spacing: -3px;
 }
 
 .temperature sup {
-  font-size: 29px;
+  font-size: clamp(19px, 1.8vw, 29px);
   margin-left: 6px;
 }
 
 .feels {
-  font-size: 17px;
-  margin: 16px 0 20px;
+  font-size: clamp(13px, 1.15vw, 17px);
+  margin: 12px 0 16px;
   font-weight: 700;
 }
 
 .hi-lo {
-  gap: 42px;
-  font-size: 27px;
+  gap: clamp(18px, 2.6vw, 42px);
+  font-size: clamp(19px, 2vw, 27px);
 }
 
 .hi-lo span {
-  margin-top: 8px;
+  margin-top: 6px;
   color: rgba(255, 255, 255, .88);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
 }
 
@@ -231,58 +290,65 @@ h1 {
 }
 
 .condition-glyph {
-  width: 210px;
-  gap: 10px;
+  width: clamp(150px, 15vw, 210px);
+  gap: 8px;
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .45)) drop-shadow(0 0 18px rgba(255, 255, 255, .36));
 }
 
 .condition-glyph svg {
-  width: 126px;
-  height: 126px;
+  width: clamp(84px, 9vw, 126px);
+  height: clamp(84px, 9vw, 126px);
 }
 
 .condition-glyph strong {
-  font-size: 29px;
+  font-size: clamp(20px, 2vw, 29px);
+  text-align: center;
 }
 
 .metrics-grid {
-  gap: 10px;
+  gap: 8px;
 }
 
 .metric-card {
-  padding: 17px 18px 13px;
+  padding: clamp(12px, 1.15vw, 17px) clamp(12px, 1.2vw, 18px) 10px;
 }
 
 .metric-icon {
-  height: 42px;
-  margin-top: 13px;
+  height: clamp(30px, 3.2vw, 42px);
+  margin-top: 10px;
   color: #ffffff;
 }
 
 .metric-icon svg {
-  width: 34px;
-  height: 34px;
+  width: clamp(25px, 2.6vw, 34px);
+  height: clamp(25px, 2.6vw, 34px);
   stroke-width: 1.65;
 }
 
 .metric-value {
-  font-size: 34px;
+  font-size: clamp(25px, 2.7vw, 34px);
   letter-spacing: -1px;
 }
 
 .metric-note {
+  min-height: 26px;
   color: #ffffff;
-  font-size: 13px;
+  font-size: clamp(11px, .95vw, 13px);
   font-weight: 700;
 }
 
 .sparkline {
-  margin-top: 8px;
+  margin-top: 4px;
+  height: 24px;
+}
+
+.metric-scale {
+  font-size: 10px;
 }
 
 .forecast-panel {
   grid-column: 1 / 5;
-  padding: 13px 13px 11px;
+  padding: 12px;
 }
 
 .forecast-panel .panel-title::after {
@@ -290,8 +356,8 @@ h1 {
 }
 
 .forecast-grid {
-  height: calc(100% - 26px);
-  gap: 10px;
+  height: calc(100% - 24px);
+  gap: 8px;
   margin-top: 8px;
   perspective: 1100px;
 }
@@ -299,7 +365,7 @@ h1 {
 .forecast-card {
   min-height: unset;
   border-radius: 10px;
-  padding: 12px;
+  padding: clamp(9px, .9vw, 12px);
   border-color: rgba(21, 214, 255, .54);
   isolation: isolate;
   box-shadow: 0 0 14px rgba(0, 225, 255, .10), inset 0 0 24px rgba(0, 0, 0, .44), inset 0 1px 0 rgba(255, 255, 255, .16);
@@ -341,7 +407,7 @@ h1 {
   padding: 0;
   border: 0;
   border-radius: 0;
-  font-size: 12px;
+  font-size: clamp(10px, .85vw, 12px);
   font-weight: 900;
   color: #ffffff;
   text-shadow: 0 2px 6px rgba(0, 0, 0, .86);
@@ -352,9 +418,9 @@ h1 {
 }
 
 .forecast-icon {
-  margin: 14px auto 10px;
-  width: 72px;
-  height: 72px;
+  margin: clamp(8px, 1vw, 14px) auto clamp(6px, .75vw, 10px);
+  width: clamp(52px, 5.8vw, 72px);
+  height: clamp(52px, 5.8vw, 72px);
   padding: 0;
   border-radius: 0;
   filter: drop-shadow(0 7px 16px rgba(0, 0, 0, .45)) drop-shadow(0 0 18px rgba(255, 255, 255, .42));
@@ -364,61 +430,61 @@ h1 {
   padding: 0;
   border: 0;
   justify-content: flex-start;
-  gap: 30px;
+  gap: clamp(12px, 1.7vw, 28px);
   backdrop-filter: none;
 }
 
 .forecast-temps b {
-  font-size: 28px;
+  font-size: clamp(20px, 2vw, 28px);
 }
 
 .forecast-temps span {
   color: var(--reference-cyan);
-  font-size: 24px;
+  font-size: clamp(18px, 1.7vw, 24px);
 }
 
 .forecast-condition {
-  min-height: 25px;
-  margin-top: 5px;
-  font-size: 13px;
+  min-height: 22px;
+  margin-top: 4px;
+  font-size: clamp(11px, .95vw, 13px);
 }
 
 .forecast-precip {
-  margin-top: 6px;
+  margin-top: 5px;
   padding: 0;
   border: 0;
   color: #ffffff;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .moon-panel {
   grid-column: 5 / 7;
-  padding: 13px 16px;
+  padding: 12px 14px;
 }
 
 .moon-visual {
-  right: 54px;
-  top: 38px;
-  width: 150px;
-  height: 150px;
+  right: clamp(28px, 3.5vw, 54px);
+  top: clamp(32px, 4vw, 46px);
+  width: clamp(110px, 11vw, 150px);
+  height: clamp(110px, 11vw, 150px);
   box-shadow: 0 0 32px rgba(255, 255, 255, .25);
 }
 
 .moon-copy {
-  left: 18px;
-  bottom: 16px;
-  gap: 7px;
+  left: 16px;
+  bottom: 14px;
+  gap: 6px;
 }
 
 .moon-copy strong {
-  font-size: 20px;
+  font-size: clamp(16px, 1.5vw, 20px);
 }
 
 .radar-panel,
 .aqi-panel,
 .astro-panel,
 .trend-panel {
-  padding: 13px 16px;
+  padding: 12px 14px;
 }
 
 .radar-panel {
@@ -426,7 +492,8 @@ h1 {
 }
 
 .radar-map {
-  height: 166px;
+  height: calc(100% - 58px);
+  min-height: 112px;
   margin-top: 8px;
   border-radius: 8px;
 }
@@ -436,13 +503,13 @@ h1 {
 }
 
 .map-label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
 }
 
 .radar-legend {
-  height: 31px;
-  gap: 14px;
+  height: 26px;
+  gap: 10px;
   color: rgba(255, 255, 255, .75);
   font-size: 10px;
 }
@@ -457,18 +524,19 @@ h1 {
 }
 
 .aqi-content {
-  grid-template-columns: 126px 1fr;
-  margin-top: 11px;
+  grid-template-columns: minmax(82px, 118px) minmax(0, 1fr);
+  margin-top: 8px;
+  gap: 8px;
 }
 
 .aqi-gauge,
 .aqi-ring {
-  width: 122px;
-  height: 122px;
+  width: clamp(92px, 8.5vw, 122px);
+  height: clamp(92px, 8.5vw, 122px);
 }
 
 .aqi-value strong {
-  font-size: 42px;
+  font-size: clamp(30px, 3.1vw, 42px);
 }
 
 .aqi-value span,
@@ -479,7 +547,7 @@ h1 {
 }
 
 .aqi-stats {
-  font-size: 12px;
+  font-size: clamp(10px, .85vw, 12px);
 }
 
 .astro-panel {
@@ -493,11 +561,34 @@ h1 {
 .station-details,
 .telemetry-panel,
 .camera-panel {
-  padding: 13px 15px;
+  padding: 11px 12px;
 }
 
 .station-details {
   grid-column: 1 / 2;
+}
+
+.station-detail-list,
+.station-details {
+  font-size: clamp(9px, .8vw, 12px);
+}
+
+.telemetry-grid,
+.precip-grid,
+.lightning-grid {
+  gap: 6px;
+}
+
+.telemetry-grid b,
+.precip-grid b,
+.lightning-grid b {
+  font-size: clamp(18px, 1.55vw, 24px);
+}
+
+.telemetry-grid span,
+.precip-grid span,
+.lightning-grid span {
+  font-size: clamp(8px, .68vw, 10px);
 }
 
 .camera-panel {
@@ -515,7 +606,29 @@ h1 {
 }
 
 .site-footer {
-  color: rgba(255, 255, 255, .46);
+  display: none;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-shell {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+
+  .top-band {
+    grid-template-columns: minmax(360px, 1fr) minmax(410px, 480px);
+  }
+
+  h1 {
+    font-size: clamp(34px, 4vw, 52px);
+  }
+
+  .header-actions {
+    grid-template-rows: 32px 60px 32px;
+  }
+
+  .top-nav a {
+    min-height: 60px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
