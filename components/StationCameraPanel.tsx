@@ -12,16 +12,16 @@ export default function StationCameraPanel() {
   const [statusMessage, setStatusMessage] = useState('Initializing secure camera bridge...')
 
   useEffect(() => {
-    const timer = window.setInterval(() => setRefreshKey(Date.now()), 6000)
+    const timer = window.setInterval(() => setRefreshKey(Date.now()), 18000)
     return () => window.clearInterval(timer)
   }, [])
 
   useEffect(() => {
-    fetch(lorexCameraStatusUrl(), { cache: 'no-store' })
+    fetch(lorexCameraStatusUrl(), { cache: 'force-cache' })
       .then((response) => response.json())
       .then((data) => setStatusMessage(data?.message || 'Lorex camera online'))
       .catch(() => setStatusMessage('Lorex camera endpoint not responding'))
-  }, [refreshKey])
+  }, [])
 
   const imageUrl = nextLorexCameraUrl(refreshKey)
 
