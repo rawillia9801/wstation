@@ -25,21 +25,9 @@ function headersFromResponse(response: Response) {
   return headers
 }
 
-function upstreamHeaders(): Record<string, string> {
-  const headers: Record<string, string> = {
-    'user-agent': 'wstation-lorex-camera/1.3'
-  }
-
-  if (lorexPass) {
-    const token = Buffer.from(`${lorexUser}:${lorexPass}`).toString('base64')
-    headers.Authorization = `Basic ${token}`
-  }
-
-  return headers
-}
-
-function healthyStatus(message: string) {
+function healthyStatus(message: string, ok = true) {
   return NextResponse.json({
+    ok,
     name: cameraName,
     configured: Boolean(streamUrl || snapshotUrl),
     feedType,
@@ -51,34 +39,64 @@ function healthyStatus(message: string) {
   })
 }
 
-export async function GET(request: NextRequest) {
-  const kind = request.nextUrl.searchParams.get('kind') === 'snapshot' ? 'snapshot' : 'stream'
+async function tryFetch(url: string, init?: RequestInit) {
+  try {
+    const response = await fetch(url, { cache: 'no-store', ...init })
+    if (response.ok && response.body) return response
+  } catch {}
+  return null
+}
 
-  if (request.nextUrl.searchParams.get('status') === '1') {
-    return healthyStatus((streamUrl || snapshotUrl) ? 'Lorex camera feed online.' : 'Lorex camera awaiting external feed URL configuration.')
+async function fetchLorex(url: string) {
+  if (lorexPass) {
+    const token = Buffer.from(`${lorexUser}:${lorexPass}`).toString('base64')
+
+    const headerAuth = await tryFetch(url, {
+      headers: {
+        Authorization: `Basic ${token}`,
+        'user-agent': 'wstation-lorex-camera/2.0'
+      }
+    })
+    if (headerAuth) return headerAuth
+
+    try {
+      const authUrl = new URL(url)
+      authUrl.username = lorexUser
+      authUrl.password = lorexPass
+      const embeddedAuth = await tryFetch(authUrl.toString(), {
+        headers: { 'user-agent': 'wstation-lorex-camera/2.0' }
+      })
+      if (embeddedAuth) return embeddedAuth
+    } catch {}
   }
 
+  return await tryFetch(url, {
+    headers: { 'user-agent': 'wstation-lorex-camera/2.0' }
+  })
+}
+
+export async function GET(request: NextRequest) {
+  const kind = request.nextUrl.searchParams.get('kind') === 'snapshot' ? 'snapshot' : 'stream'
   const sourceUrl = getSourceUrl(kind)
+
+  if (request.nextUrl.searchParams.get('status') === '1') {
+    if (!sourceUrl) return healthyStatus('Lorex camera URL missing.', false)
+    const probe = await fetchLorex(sourceUrl)
+    return probe ? healthyStatus('Lorex camera endpoint responding.', true) : healthyStatus('Lorex upstream unreachable or authentication rejected.', false)
+  }
 
   if (!sourceUrl) {
     return NextResponse.redirect('https://placehold.co/1280x720/06141d/7ef9ff?text=CAMERA+OFFLINE', 302)
   }
 
-  try {
-    const upstream = await fetch(sourceUrl, {
-      cache: 'no-store',
-      headers: upstreamHeaders()
-    })
+  const upstream = await fetchLorex(sourceUrl)
 
-    if (!upstream.ok || !upstream.body) {
-      return NextResponse.redirect('https://placehold.co/1280x720/06141d/7ef9ff?text=CAMERA+OFFLINE', 302)
-    }
-
-    return new Response(upstream.body, {
-      status: 200,
-      headers: headersFromResponse(upstream)
-    })
-  } catch {
+  if (!upstream) {
     return NextResponse.redirect('https://placehold.co/1280x720/06141d/7ef9ff?text=CAMERA+OFFLINE', 302)
   }
+
+  return new Response(upstream.body, {
+    status: 200,
+    headers: headersFromResponse(upstream)
+  })
 }
