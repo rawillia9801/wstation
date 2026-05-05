@@ -1,1 +1,528 @@
-/* ui quality marker */
+/* Reference-quality dashboard polish. Front-end only; keeps live data pipeline untouched. */
+:root {
+  --reference-cyan: #1ffff2;
+  --reference-cyan-border: rgba(31, 255, 242, .44);
+  --reference-green: #8dff00;
+  --reference-amber: #ffb000;
+}
+
+.dashboard-shell {
+  min-width: 1360px;
+  min-height: 900px;
+  grid-template-columns: 112px 1fr;
+  gap: 12px;
+  padding: 10px;
+}
+
+.command-rail {
+  min-height: 880px;
+  height: calc(100vh - 20px);
+  padding: 24px 8px 10px;
+  border-radius: 14px;
+  border-color: rgba(31, 255, 242, .28);
+  box-shadow: 0 0 34px rgba(0, 221, 255, .16), inset -1px 0 24px rgba(0, 229, 255, .08);
+}
+
+.rail-logo {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 28px;
+  border-width: 2px;
+  border-color: rgba(174, 255, 250, .86);
+  box-shadow: 0 0 18px rgba(31, 255, 242, .50), inset 0 0 20px rgba(31, 255, 242, .14);
+}
+
+.rail-nav {
+  gap: 12px;
+}
+
+.rail-button {
+  height: 68px;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, .82);
+}
+
+.rail-button span,
+.top-nav a span {
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.rail-button.active,
+.top-nav a.active {
+  color: var(--reference-cyan);
+  border-color: rgba(31, 255, 242, .72);
+  box-shadow: 0 0 24px rgba(31, 255, 242, .28), inset 0 0 22px rgba(31, 255, 242, .14);
+}
+
+.rail-title,
+.panel-title,
+.metric-title,
+.eyebrow {
+  color: var(--reference-cyan);
+  font-weight: 900;
+  text-shadow: 0 0 10px rgba(31, 255, 242, .25);
+}
+
+.online-dot,
+.live-text,
+.quality-percent,
+.camera-live {
+  color: var(--reference-green);
+}
+
+.online-dot span,
+.live-pill span,
+.live-text::before,
+.camera-live span {
+  box-shadow: 0 0 13px rgba(141, 255, 0, .85);
+}
+
+.dashboard-main {
+  grid-template-rows: 126px auto;
+  gap: 8px;
+}
+
+.top-band {
+  align-items: start;
+  gap: 22px;
+  padding-top: 3px;
+}
+
+.title-cluster {
+  min-width: 650px;
+  padding-left: 4px;
+}
+
+.eyebrow {
+  font-size: 14px;
+  letter-spacing: .12em;
+}
+
+h1 {
+  margin: 8px 0 7px;
+  font-size: clamp(46px, 4.55vw, 76px);
+  line-height: .9;
+  font-weight: 900;
+  letter-spacing: -2px;
+  color: #ffffff;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, .28), 0 0 18px rgba(255, 255, 255, .16);
+}
+
+.subhead {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, .94);
+}
+
+.header-actions {
+  width: min(590px, 44vw);
+  grid-template-rows: 36px 72px 38px;
+  gap: 10px;
+}
+
+.clock-pill,
+.live-pill,
+.top-nav a {
+  border-radius: 10px;
+  border-color: rgba(120, 155, 175, .26);
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.top-nav {
+  gap: 12px;
+}
+
+.top-nav a {
+  min-height: 72px;
+}
+
+.alert-banner {
+  height: 40px;
+  border-radius: 11px;
+  border-color: rgba(255, 176, 0, .42);
+  color: var(--reference-amber);
+}
+
+.alert-banner button {
+  color: var(--reference-amber);
+  font-weight: 900;
+}
+
+.content-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-rows: 258px 238px 228px 130px;
+  gap: 10px;
+  padding-bottom: 8px;
+}
+
+.hero-panel,
+.forecast-panel,
+.radar-panel,
+.aqi-panel,
+.astro-panel,
+.trend-panel,
+.moon-panel,
+.metric-card,
+.telemetry-panel,
+.station-details,
+.camera-panel {
+  border-radius: 13px;
+  border-color: var(--reference-cyan-border);
+  box-shadow: 0 0 22px rgba(0, 225, 255, .11), inset 0 1px 0 rgba(255, 255, 255, .07), inset 0 -30px 42px rgba(0, 0, 0, .24);
+}
+
+.panel-title {
+  font-size: 14px;
+  letter-spacing: .11em;
+}
+
+.hero-panel {
+  grid-column: 1 / 4;
+  padding: 20px 28px 20px 32px;
+}
+
+.hero-bg {
+  opacity: .96;
+  filter: saturate(1.18) contrast(1.12) brightness(.86);
+}
+
+.hero-bg::after {
+  opacity: .78;
+}
+
+.temperature {
+  font-size: clamp(72px, 6.7vw, 106px);
+  line-height: .83;
+  font-weight: 900;
+  letter-spacing: -3px;
+}
+
+.temperature sup {
+  font-size: 29px;
+  margin-left: 6px;
+}
+
+.feels {
+  font-size: 17px;
+  margin: 16px 0 20px;
+  font-weight: 700;
+}
+
+.hi-lo {
+  gap: 42px;
+  font-size: 27px;
+}
+
+.hi-lo span {
+  margin-top: 8px;
+  color: rgba(255, 255, 255, .88);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.up {
+  color: #ff6e1d;
+}
+
+.down {
+  color: #11dfff;
+}
+
+.condition-glyph {
+  width: 210px;
+  gap: 10px;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .45)) drop-shadow(0 0 18px rgba(255, 255, 255, .36));
+}
+
+.condition-glyph svg {
+  width: 126px;
+  height: 126px;
+}
+
+.condition-glyph strong {
+  font-size: 29px;
+}
+
+.metrics-grid {
+  gap: 10px;
+}
+
+.metric-card {
+  padding: 17px 18px 13px;
+}
+
+.metric-icon {
+  height: 42px;
+  margin-top: 13px;
+  color: #ffffff;
+}
+
+.metric-icon svg {
+  width: 34px;
+  height: 34px;
+  stroke-width: 1.65;
+}
+
+.metric-value {
+  font-size: 34px;
+  letter-spacing: -1px;
+}
+
+.metric-note {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.sparkline {
+  margin-top: 8px;
+}
+
+.forecast-panel {
+  grid-column: 1 / 5;
+  padding: 13px 13px 11px;
+}
+
+.forecast-panel .panel-title::after {
+  content: '';
+}
+
+.forecast-grid {
+  height: calc(100% - 26px);
+  gap: 10px;
+  margin-top: 8px;
+  perspective: 1100px;
+}
+
+.forecast-card {
+  min-height: unset;
+  border-radius: 10px;
+  padding: 12px;
+  border-color: rgba(21, 214, 255, .54);
+  isolation: isolate;
+  box-shadow: 0 0 14px rgba(0, 225, 255, .10), inset 0 0 24px rgba(0, 0, 0, .44), inset 0 1px 0 rgba(255, 255, 255, .16);
+  transition: transform .28s ease, border-color .28s ease, box-shadow .28s ease;
+}
+
+.forecast-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, .72);
+}
+
+.forecast-bg {
+  transform: scale(1.08);
+  filter: saturate(1.28) contrast(1.1) brightness(.92);
+}
+
+.forecast-card::before,
+.forecast-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.forecast-shade {
+  z-index: 1;
+}
+
+.forecast-day,
+.forecast-icon,
+.forecast-temps,
+.forecast-condition,
+.forecast-precip {
+  z-index: 3;
+}
+
+.forecast-day {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  font-size: 12px;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, .86);
+}
+
+.forecast-day::before {
+  display: none;
+}
+
+.forecast-icon {
+  margin: 14px auto 10px;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border-radius: 0;
+  filter: drop-shadow(0 7px 16px rgba(0, 0, 0, .45)) drop-shadow(0 0 18px rgba(255, 255, 255, .42));
+}
+
+.forecast-temps {
+  padding: 0;
+  border: 0;
+  justify-content: flex-start;
+  gap: 30px;
+  backdrop-filter: none;
+}
+
+.forecast-temps b {
+  font-size: 28px;
+}
+
+.forecast-temps span {
+  color: var(--reference-cyan);
+  font-size: 24px;
+}
+
+.forecast-condition {
+  min-height: 25px;
+  margin-top: 5px;
+  font-size: 13px;
+}
+
+.forecast-precip {
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.moon-panel {
+  grid-column: 5 / 7;
+  padding: 13px 16px;
+}
+
+.moon-visual {
+  right: 54px;
+  top: 38px;
+  width: 150px;
+  height: 150px;
+  box-shadow: 0 0 32px rgba(255, 255, 255, .25);
+}
+
+.moon-copy {
+  left: 18px;
+  bottom: 16px;
+  gap: 7px;
+}
+
+.moon-copy strong {
+  font-size: 20px;
+}
+
+.radar-panel,
+.aqi-panel,
+.astro-panel,
+.trend-panel {
+  padding: 13px 16px;
+}
+
+.radar-panel {
+  grid-column: 1 / 3;
+}
+
+.radar-map {
+  height: 166px;
+  margin-top: 8px;
+  border-radius: 8px;
+}
+
+.radar-tile {
+  filter: saturate(1.8) contrast(1.22) brightness(1.05);
+}
+
+.map-label {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.radar-legend {
+  height: 31px;
+  gap: 14px;
+  color: rgba(255, 255, 255, .75);
+  font-size: 10px;
+}
+
+.radar-legend i {
+  height: 8px;
+  box-shadow: 0 0 10px rgba(104, 226, 0, .18);
+}
+
+.aqi-panel {
+  grid-column: 3 / 4;
+}
+
+.aqi-content {
+  grid-template-columns: 126px 1fr;
+  margin-top: 11px;
+}
+
+.aqi-gauge,
+.aqi-ring {
+  width: 122px;
+  height: 122px;
+}
+
+.aqi-value strong {
+  font-size: 42px;
+}
+
+.aqi-value span,
+.aqi-good,
+.aqi-stats b {
+  color: var(--reference-green);
+  font-weight: 900;
+}
+
+.aqi-stats {
+  font-size: 12px;
+}
+
+.astro-panel {
+  grid-column: 4 / 5;
+}
+
+.trend-panel {
+  grid-column: 5 / 7;
+}
+
+.station-details,
+.telemetry-panel,
+.camera-panel {
+  padding: 13px 15px;
+}
+
+.station-details {
+  grid-column: 1 / 2;
+}
+
+.camera-panel {
+  grid-column: 5 / 7;
+}
+
+.camera-bg {
+  filter: saturate(1.2) contrast(1.1) brightness(.70);
+}
+
+.camera-panel button {
+  border-radius: 8px;
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.site-footer {
+  color: rgba(255, 255, 255, .46);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .forecast-card,
+  .forecast-card::before,
+  .forecast-card::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
