@@ -8,6 +8,8 @@ export type WeatherPayload = {
   windDirection: string
   uvIndex: number
   condition: string
+  radarUrl?: string
+  radarSource?: string
   forecast: Array<{
     day: string
     high: number
@@ -15,11 +17,18 @@ export type WeatherPayload = {
     condition: string
     rainChance: number
   }>
-  radarUrl?: string
 }
 
-const FALLBACK_RADAR_URL =
+const DEFAULT_RADAR_URL =
   'https://radar.weather.gov/ridge/standard/SOUTHEAST_loop.gif'
+
+function resolveRadarUrl(data: any) {
+  return (
+    data?.radarUrl ||
+    process.env.NEXT_PUBLIC_RADAR_URL ||
+    DEFAULT_RADAR_URL
+  )
+}
 
 async function fetchStaleyStation(): Promise<WeatherPayload | null> {
   try {
@@ -53,7 +62,8 @@ async function fetchStaleyStation(): Promise<WeatherPayload | null> {
       uvIndex: Number(data.uvIndex ?? 0),
       condition: data.condition ?? 'Unknown',
       forecast: data.forecast ?? [],
-      radarUrl: data.radarUrl ?? FALLBACK_RADAR_URL,
+      radarUrl: resolveRadarUrl(data),
+      radarSource: 'staley-radar',
     }
   } catch (error) {
     console.error('Staley station fetch failed:', error)
@@ -75,7 +85,8 @@ async function fetchFallbackWeather(): Promise<WeatherPayload> {
       windDirection: 'WNW',
       uvIndex: 2,
       condition: 'Partly Cloudy',
-      radarUrl: FALLBACK_RADAR_URL,
+      radarUrl: DEFAULT_RADAR_URL,
+      radarSource: 'weather.gov',
       forecast: [
         {
           day: 'TODAY',
@@ -108,7 +119,8 @@ async function fetchFallbackWeather(): Promise<WeatherPayload> {
     uvIndex: Number(data.uvIndex ?? 0),
     condition: data.condition ?? 'Unknown',
     forecast: data.forecast ?? [],
-    radarUrl: data.radarUrl ?? FALLBACK_RADAR_URL,
+    radarUrl: resolveRadarUrl(data),
+    radarSource: 'fallback-radar',
   }
 }
 
